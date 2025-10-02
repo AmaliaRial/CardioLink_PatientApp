@@ -4,6 +4,7 @@ import common.enums.Sex;
 
 import java.util.Date;
 import java.util.Objects;
+//bueno
 
 public class Patient {
     private int idPatient;
