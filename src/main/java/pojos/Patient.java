@@ -8,27 +8,27 @@ import java.util.Objects;
 
 public class Patient {
     private int idPatient;
-    private String name;
-    private String dni;
-    private Date dob;
-    private String email;
-    private String password;
-    private Sex sex;
-    private int phoneNumber;
-    private int healthInsuranceNumber;
-    private int emergencyContact;
+    private String namePatient;
+    private String dniPatient;
+    private Date dobPatient;
+    private String emailPatient;
+    private String passwordPatient;
+    private Sex sexPatient;
+    private int phoneNumberPatient;
+    private int healthInsuranceNumberPatient;
+    private int emergencyContactPatient;
 
     public Patient(int idPatient, String name, String dni, Date dob, String email,String password, Sex sex, int phoneNumber, int healthInsuranceNumber, int emergencyContact) {
         this.idPatient = idPatient;
-        this.name=name;
-        this.dni=dni;
-        this.dob=dob;
-        this.email=email;
-        this.password=password;
-        this.sex=sex;
-        this.phoneNumber=phoneNumber;
-        this.healthInsuranceNumber=healthInsuranceNumber;
-        this.emergencyContact=emergencyContact;
+        this.namePatient =name;
+        this.dniPatient =dni;
+        this.dobPatient =dob;
+        this.emailPatient =email;
+        this.passwordPatient =password;
+        this.sexPatient =sex;
+        this.phoneNumberPatient =phoneNumber;
+        this.healthInsuranceNumberPatient =healthInsuranceNumber;
+        this.emergencyContactPatient =emergencyContact;
     }
 
     public int getIdPatient() {
@@ -37,66 +37,66 @@ public class Patient {
     public void setIdPatient(int idPatient) {
         this.idPatient = idPatient;
     }
-    public String getName() {
-        return name;
+    public String getNamePatient() {
+        return namePatient;
     }
-    public void setName(String name) {
-        this.name = name;
+    public void setNamePatient(String namePatient) {
+        this.namePatient = namePatient;
     }
-    public String getDni() {
-        return dni;
+    public String getDniPatient() {
+        return dniPatient;
     }
-    public void setDni(String dni) {
-        this.dni = dni;
+    public void setDniPatient(String dniPatient) {
+        this.dniPatient = dniPatient;
     }
-    public Date getDob() {
-        return dob;
+    public Date getDobPatient() {
+        return dobPatient;
     }
-    public void setDob(Date dob) {
-        this.dob = dob;
+    public void setDobPatient(Date dobPatient) {
+        this.dobPatient = dobPatient;
     }
-    public String getEmail() {
-        return email;
+    public String getEmailPatient() {
+        return emailPatient;
     }
-    public void setEmail(String email) {
-        this.email = email;
+    public void setEmailPatient(String emailPatient) {
+        this.emailPatient = emailPatient;
     }
-    public String getPassword() {
-        return password;
+    public String getPasswordPatient() {
+        return passwordPatient;
     }
-    public void setPassword(String password) {
-        this.password = password;
+    public void setPasswordPatient(String passwordPatient) {
+        this.passwordPatient = passwordPatient;
     }
 
-    public int getPhoneNumber() {
-        return phoneNumber;
+    public int getPhoneNumberPatient() {
+        return phoneNumberPatient;
     }
-    public void setPhoneNumber(int phoneNumber) {
-        this.phoneNumber = phoneNumber;
+    public void setPhoneNumberPatient(int phoneNumberPatient) {
+        this.phoneNumberPatient = phoneNumberPatient;
     }
-    public int getHealthInsuranceNumber() {
-        return healthInsuranceNumber;
+    public int getHealthInsuranceNumberPatient() {
+        return healthInsuranceNumberPatient;
     }
-    public void setHealthInsuranceNumber(int healthInsuranceNumber) {
-        this.healthInsuranceNumber = healthInsuranceNumber;
+    public void setHealthInsuranceNumberPatient(int healthInsuranceNumberPatient) {
+        this.healthInsuranceNumberPatient = healthInsuranceNumberPatient;
     }
-    public int getEmergencyContact() {
-        return emergencyContact;
+    public int getEmergencyContactPatient() {
+        return emergencyContactPatient;
     }
-    public void setEmergencyContact(int emergencyContact) {
-        this.emergencyContact = emergencyContact;
+    public void setEmergencyContactPatient(int emergencyContactPatient) {
+        this.emergencyContactPatient = emergencyContactPatient;
     }
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Patient patient = (Patient) o;
-        return idPatient == patient.idPatient && phoneNumber == patient.phoneNumber && healthInsuranceNumber == patient.healthInsuranceNumber && emergencyContact == patient.emergencyContact && Objects.equals(name, patient.name) && Objects.equals(dni, patient.dni) && Objects.equals(dob, patient.dob) && Objects.equals(email, patient.email) && Objects.equals(password, patient.password) && sex == patient.sex;
+        return idPatient == patient.idPatient && phoneNumberPatient == patient.phoneNumberPatient && healthInsuranceNumberPatient == patient.healthInsuranceNumberPatient && emergencyContactPatient == patient.emergencyContactPatient && Objects.equals(namePatient, patient.namePatient) && Objects.equals(dniPatient, patient.dniPatient) && Objects.equals(dobPatient, patient.dobPatient) && Objects.equals(emailPatient, patient.emailPatient) && Objects.equals(passwordPatient, patient.passwordPatient) && sexPatient == patient.sexPatient;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(idPatient, name, dni, dob, email, password, sex, phoneNumber, healthInsuranceNumber, emergencyContact);
+        return Objects.hash(idPatient, namePatient, dniPatient, dobPatient, emailPatient, passwordPatient, sexPatient, phoneNumberPatient, healthInsuranceNumberPatient, emergencyContactPatient);
     }
 
 
@@ -104,15 +104,15 @@ public class Patient {
     public String toString() {
         return "Patient{" +
                 "idPatient=" + idPatient +
-                ", name='" + name + '\'' +
-                ", dni='" + dni + '\'' +
-                ", dob=" + dob +
-                ", email='" + email + '\'' +
-                ", password='" + password + '\'' +
-                ", sex=" + sex +
-                ", phoneNumber=" + phoneNumber +
-                ", healthInsuranceNumber=" + healthInsuranceNumber +
-                ", emergencyContact=" + emergencyContact +
+                ", name='" + namePatient + '\'' +
+                ", dni='" + dniPatient + '\'' +
+                ", dob=" + dobPatient +
+                ", email='" + emailPatient + '\'' +
+                ", password='" + passwordPatient + '\'' +
+                ", sex=" + sexPatient +
+                ", phoneNumber=" + phoneNumberPatient +
+                ", healthInsuranceNumber=" + healthInsuranceNumberPatient +
+                ", emergencyContact=" + emergencyContactPatient +
                 '}';
     }
 }
