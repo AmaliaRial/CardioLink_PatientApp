@@ -12,6 +12,8 @@ public class JDBCPatientManager implements PatientManager {
     public JDBCPatientManager(ConnectionManager conMan) {
         this.conMan = conMan;
         this.c = conMan.getConnection();
+
+
     }
 
 
