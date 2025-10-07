@@ -80,7 +80,8 @@ public class BITalino {
 
         try
         {
-            hSocket = (StreamConnection)Connector.open("btspp://" + macAdd + ":1", Connector.READ_WRITE);
+            //Changing the socket to 2 to see if it works
+            hSocket = (StreamConnection)Connector.open("btspp://" + macAdd + ":2", Connector.READ_WRITE);
             iStream = hSocket.openDataInputStream();
             oStream = hSocket.openDataOutputStream();
             Thread.sleep(2000);

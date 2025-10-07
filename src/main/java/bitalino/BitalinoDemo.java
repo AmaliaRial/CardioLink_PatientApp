@@ -22,15 +22,17 @@ public class BitalinoDemo {
 
             //You need TO CHANGE THE MAC ADDRESS
             //You should have the MAC ADDRESS in a sticker in the Bitalino
-            String macAddress = "98:D3:91:FD:69:70";
+            //Amalia's and Rodri's BITalino MAC Address "84:BA:20:SE:FD:75"
+            String macAddress = "84:BA:20:SE:FD:75";
             
             //Sampling rate, should be 10, 100 or 1000
-            int SamplingRate = 10;
+            int SamplingRate = 100;
             bitalino.open(macAddress, SamplingRate);
 
             // Start acquisition on analog channels A2 and A6
             // For example, If you want A1, A3 and A4 you should use {0,2,3}
-            int[] channelsToAcquire = {1, 5};
+            //Since we want ECG and EDA we use A2 and A3 therefore {1,2}
+            int[] channelsToAcquire = {1, 2};
             bitalino.start(channelsToAcquire);
 
             //Read in total 10000000 times
