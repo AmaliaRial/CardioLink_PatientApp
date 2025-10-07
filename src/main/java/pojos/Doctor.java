@@ -66,4 +66,6 @@ public class Doctor {
                 ", sex=" + sexDoctor +
                 '}';
     }
+
+
 }
