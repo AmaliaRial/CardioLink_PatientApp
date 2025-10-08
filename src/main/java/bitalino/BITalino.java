@@ -82,8 +82,8 @@ public class BITalino {
         {
             //Changing the socket to 2 to see if it works
             //onPC tried COM 1
-            //hSocket = (StreamConnection)Connector.open("btspp://" + macAdd + ":1", Connector.READ_WRITE);
-            hSocket = (StreamConnection) Connector.open("comm:COM4;baudrate=115200");
+            hSocket = (StreamConnection)Connector.open("btspp://" + macAdd + ":1", Connector.READ_WRITE);
+            //hSocket = (StreamConnection) Connector.open("comm:COM4;baudrate=9600");
             iStream = hSocket.openDataInputStream();
             oStream = hSocket.openDataOutputStream();
             Thread.sleep(2000);
