@@ -2,30 +2,31 @@ package pojos;
 import java.time.LocalDate;
 import java.util.Objects;
 
-public class MedicalRecord {
-    private String id;
+public class DiagnosisFile {
+    private int id;
     private String symptoms;
     private String diagnosis;
     private String medication;
     private LocalDate date;
+    private int patientId;
 
-
-    public MedicalRecord() {
+    public DiagnosisFile() {
     }
 
-    public MedicalRecord(String id, String symptoms, String diagnosis, String medication, LocalDate date) {
+    public DiagnosisFile(int id, String symptoms, String diagnosis, String medication, LocalDate date, int patientId) {
         this.id = id;
         this.symptoms = symptoms;
         this.diagnosis = diagnosis;
         this.medication = medication;
         this.date = date;
+        this.patientId= patientId;
     }
 
-    public String getId() {
+    public int getId() {
         return id;
     }
 
-    public void setId(String id) {
+    public void setId(int id) {
         this.id = id;
     }
 
@@ -61,6 +62,14 @@ public class MedicalRecord {
         this.date = date;
     }
 
+    public int getPatientId() {
+        return patientId;
+    }
+
+    public void setPatientId(int id) {
+        this.patientId = id;
+    }
+
     @Override
     public String toString() {
         return "MedicalRecord{" +
@@ -69,6 +78,7 @@ public class MedicalRecord {
                 ", diagnosis='" + diagnosis + '\'' +
                 ", medication='" + medication + '\'' +
                 ", date=" + date +
+                ", patient id=" + patientId +
                 '}';
     }
 
@@ -76,7 +86,7 @@ public class MedicalRecord {
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        MedicalRecord that = (MedicalRecord) o;
+        DiagnosisFile that = (DiagnosisFile) o;
         return Objects.equals(id, that.id);
     }
 
