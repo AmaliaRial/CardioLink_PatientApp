@@ -17,8 +17,8 @@ public class BitalinoDemo {
             bitalino = new BITalino();
             // Code to find Devices
             //Only works on some OS
-            //Vector<RemoteDevice> devices = bitalino.findDevices();
-            //System.out.println(devices);
+            Vector<RemoteDevice> devices = bitalino.findDevices();
+            System.out.println(devices);
 
             //You need TO CHANGE THE MAC ADDRESS
             //You should have the MAC ADDRESS in a sticker in the Bitalino
