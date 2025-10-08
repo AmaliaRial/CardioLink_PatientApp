@@ -22,9 +22,9 @@ public class BitalinoDemo {
 
             //You need TO CHANGE THE MAC ADDRESS
             //You should have the MAC ADDRESS in a sticker in the Bitalino
-            //Amalia's and Rodri's BITalino MAC Address "84:BA:20:SE:FD:75"
+            //NEW Amalia's and Rodri's BITalino MAC Address "20:16:07:18:17:86"
             //Lorena's and Carmen's BITalino MAC Address "0C:43:14:24:78:F5"
-            String macAddress = "0C:43:14:24:78:F5";
+            String macAddress = "20:16:07:18:17:86";
             
             //Sampling rate, should be 10, 100 or 1000
             int SamplingRate = 100;
