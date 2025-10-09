@@ -4,7 +4,7 @@ import common.enums.Sex;
 
 import java.util.Date;
 import java.util.Objects;
-//bueno
+
 
 public class Patient {
     private int idPatient;
@@ -114,5 +114,17 @@ public class Patient {
                 ", healthInsuranceNumber=" + healthInsuranceNumberPatient +
                 ", emergencyContact=" + emergencyContactPatient +
                 '}';
+    }
+    public Sex getSexPatient() {
+        return sexPatient;
+    }
+    public void setSexPatient(Sex sexPatient) {
+        this.sexPatient = sexPatient;
+    }
+
+    // Constructor  (sin id):
+    public Patient(String name, String dni, Date dob, String email, String password,
+                   Sex sex, int phoneNumber, int healthInsuranceNumber, int emergencyContact) {
+        this(0, name, dni, dob, email, password, sex, phoneNumber, healthInsuranceNumber, emergencyContact);
     }
 }
