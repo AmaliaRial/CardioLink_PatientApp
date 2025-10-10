@@ -1,17 +1,13 @@
 package bitalino;
 
 
-import jdk.jfr.Recording;
 
-import javax.bluetooth.RemoteDevice;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Vector;
-import java.util.logging.Level;
-import java.util.logging.Logger;
+
 
 public class BitalinoManager {
 
