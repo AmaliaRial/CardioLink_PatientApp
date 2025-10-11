@@ -1,8 +1,11 @@
 package pojos;
 
 import common.enums.Sex;
+
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.Objects;
+import java.util.List;
 
 public class Doctor {
     private int idDoctor;
@@ -12,14 +15,16 @@ public class Doctor {
     private String emailDoctor;
     // private String passwordDoctor;
     private Sex sexDoctor;
+    private List<Patient> assignedPatients;
 
-    public Doctor(int id, String name, String dni, Date dob, String email, Sex sex) {
+    public Doctor(int id, String name, String dni, Date dob, String email, Sex sex, List<Patient> patients) {
         this.idDoctor = id;
         this.nameDoctor = name;
         this.dniDoctor = dni;
         this.dobDoctor = dob;
         this.emailDoctor = email;
         this.sexDoctor = sex;
+        this.assignedPatients = patients;
     }
 
     public String getNameDoctor() {
@@ -42,6 +47,10 @@ public class Doctor {
         return sexDoctor;}
     public void setIdDoctor(Sex sexDoctor) {
         this.sexDoctor = sexDoctor;}
+    public List<Patient> getAssignedPatients() {
+        return assignedPatients;}
+    public void setAssignedPatients(List<Patient> assignedPatients) {
+        this.assignedPatients = assignedPatients;}
 
     @Override
     public boolean equals(Object o) {
@@ -64,6 +73,7 @@ public class Doctor {
                 ", dob=" + dobDoctor +
                 ", email='" + emailDoctor + '\'' +
                 ", sex=" + sexDoctor +
+                ", assigned Patients=" + assignedPatients +
                 '}';
     }
 }
