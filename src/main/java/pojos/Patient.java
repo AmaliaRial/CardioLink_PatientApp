@@ -2,7 +2,9 @@ package pojos;
 
 import common.enums.Sex;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 
@@ -17,8 +19,11 @@ public class Patient {
     private int phoneNumberPatient;
     private int healthInsuranceNumberPatient;
     private int emergencyContactPatient;
+    private int doctorId;
+    private int MACadress;
+    List<String> diagnosisFile = new ArrayList<>();
 
-    public Patient(int idPatient, String name, String dni, Date dob, String email,String password, Sex sex, int phoneNumber, int healthInsuranceNumber, int emergencyContact) {
+    public Patient(int idPatient, String name, String dni, Date dob, String email, String password, Sex sex, int phoneNumber, int healthInsuranceNumber, int emergencyContact, int doctorId, int MACadress, List<String> diagnosisFile) {
         this.idPatient = idPatient;
         this.namePatient =name;
         this.dniPatient =dni;
@@ -29,6 +34,9 @@ public class Patient {
         this.phoneNumberPatient =phoneNumber;
         this.healthInsuranceNumberPatient =healthInsuranceNumber;
         this.emergencyContactPatient =emergencyContact;
+        this.doctorId = doctorId;
+        this.MACadress = MACadress;
+        this.diagnosisFile = diagnosisFile;
     }
 
     public int getIdPatient() {
@@ -49,9 +57,7 @@ public class Patient {
     public void setDniPatient(String dniPatient) {
         this.dniPatient = dniPatient;
     }
-    public Date getDobPatient() {
-        return dobPatient;
-    }
+    public Date getDobPatient() { return dobPatient;}
     public void setDobPatient(Date dobPatient) {
         this.dobPatient = dobPatient;
     }
@@ -67,10 +73,7 @@ public class Patient {
     public void setPasswordPatient(String passwordPatient) {
         this.passwordPatient = passwordPatient;
     }
-
-    public int getPhoneNumberPatient() {
-        return phoneNumberPatient;
-    }
+    public int getPhoneNumberPatient() { return phoneNumberPatient;}
     public void setPhoneNumberPatient(int phoneNumberPatient) {
         this.phoneNumberPatient = phoneNumberPatient;
     }
@@ -78,41 +81,48 @@ public class Patient {
         return healthInsuranceNumberPatient;
     }
     public void setHealthInsuranceNumberPatient(int healthInsuranceNumberPatient) {
-        this.healthInsuranceNumberPatient = healthInsuranceNumberPatient;
-    }
+        this.healthInsuranceNumberPatient = healthInsuranceNumberPatient; }
     public int getEmergencyContactPatient() {
         return emergencyContactPatient;
     }
     public void setEmergencyContactPatient(int emergencyContactPatient) {
-        this.emergencyContactPatient = emergencyContactPatient;
-    }
+        this.emergencyContactPatient = emergencyContactPatient;}
+    public int getDoctorId() { return doctorId;}
+    public void setDoctorId(int doctorId) { this.doctorId = doctorId; }
+    public int getMACadress() { return MACadress; }
+    public void setMACadress(int MACadress) { this.MACadress = MACadress; }
+    public List<String> getDiagnosisFile() { return diagnosisFile; }
+    public void setDiagnosisFile(List<String> diagnosisFile) { this.diagnosisFile = diagnosisFile; }
+
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Patient patient = (Patient) o;
-        return idPatient == patient.idPatient && phoneNumberPatient == patient.phoneNumberPatient && healthInsuranceNumberPatient == patient.healthInsuranceNumberPatient && emergencyContactPatient == patient.emergencyContactPatient && Objects.equals(namePatient, patient.namePatient) && Objects.equals(dniPatient, patient.dniPatient) && Objects.equals(dobPatient, patient.dobPatient) && Objects.equals(emailPatient, patient.emailPatient) && Objects.equals(passwordPatient, patient.passwordPatient) && sexPatient == patient.sexPatient;
+        return idPatient == patient.idPatient && phoneNumberPatient == patient.phoneNumberPatient && healthInsuranceNumberPatient == patient.healthInsuranceNumberPatient && emergencyContactPatient == patient.emergencyContactPatient && doctorId == patient.doctorId && MACadress == patient.MACadress && Objects.equals(namePatient, patient.namePatient) && Objects.equals(dniPatient, patient.dniPatient) && Objects.equals(dobPatient, patient.dobPatient) && Objects.equals(emailPatient, patient.emailPatient) && Objects.equals(passwordPatient, patient.passwordPatient) && sexPatient == patient.sexPatient && Objects.equals(diagnosisFile, patient.diagnosisFile);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(idPatient, namePatient, dniPatient, dobPatient, emailPatient, passwordPatient, sexPatient, phoneNumberPatient, healthInsuranceNumberPatient, emergencyContactPatient);
+        return Objects.hash(idPatient, namePatient, dniPatient, dobPatient, emailPatient, passwordPatient, sexPatient, phoneNumberPatient, healthInsuranceNumberPatient, emergencyContactPatient, doctorId, MACadress, diagnosisFile);
     }
-
 
     @Override
     public String toString() {
         return "Patient{" +
                 "idPatient=" + idPatient +
-                ", name='" + namePatient + '\'' +
-                ", dni='" + dniPatient + '\'' +
-                ", dob=" + dobPatient +
-                ", email='" + emailPatient + '\'' +
-                ", password='" + passwordPatient + '\'' +
-                ", sex=" + sexPatient +
-                ", phoneNumber=" + phoneNumberPatient +
-                ", healthInsuranceNumber=" + healthInsuranceNumberPatient +
-                ", emergencyContact=" + emergencyContactPatient +
+                ", namePatient='" + namePatient + '\'' +
+                ", dniPatient='" + dniPatient + '\'' +
+                ", dobPatient=" + dobPatient +
+                ", emailPatient='" + emailPatient + '\'' +
+                ", passwordPatient='" + passwordPatient + '\'' +
+                ", sexPatient=" + sexPatient +
+                ", phoneNumberPatient=" + phoneNumberPatient +
+                ", healthInsuranceNumberPatient=" + healthInsuranceNumberPatient +
+                ", emergencyContactPatient=" + emergencyContactPatient +
+                ", doctorId=" + doctorId +
+                ", MACadress=" + MACadress +
+                ", diagnosisFile=" + diagnosisFile +
                 '}';
     }
     public Sex getSexPatient() {
