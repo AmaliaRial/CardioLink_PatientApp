@@ -31,9 +31,12 @@ public class JDBCPatientManager implements PatientManager {
 
             ps.setString(1, p.getNamePatient());
             ps.setString(2, p.getDniPatient());
-            ps.setString(3, toIso((Date) p.getDobPatient()));
+            java.util.Date utilDate = p.getDobPatient();
+            java.sql.Date sqlDate = (utilDate == null) ? null : new java.sql.Date(utilDate.getTime());
+            ps.setDate(3, sqlDate);
+
             ps.setString(4, p.getEmailPatient());
-            ps.setString(5, p.getPasswordPatient()); // en real: hash (BCrypt/Argon2)
+            ps.setString(5, p.getPasswordPatient());
             Sex sex = p.getSexPatient();
             ps.setString(6, sex == null ? null : sex.name());
             ps.setInt(7, p.getPhoneNumberPatient());
@@ -43,7 +46,27 @@ public class JDBCPatientManager implements PatientManager {
         }
     }
 
-
-
-
+    public Patient getPatientByDniAndPassword(String dni, String password) throws Exception {
+        String sql = "SELECT * FROM patients WHERE dniPatient = ? AND passwordPatient = ?";
+        try (PreparedStatement ps = conMan.getConnection().prepareStatement(sql)) {
+            ps.setString(1, dni);
+            ps.setString(2, password);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                Patient p = new Patient();
+                p.setNamePatient(rs.getString("namePatient"));
+                p.setDniPatient(rs.getString("dniPatient"));
+                p.setDobPatient(rs.getDate("dobPatient"));
+                p.setEmailPatient(rs.getString("emailPatient"));
+                p.setPasswordPatient(rs.getString("passwordPatient"));
+                String sexStr = rs.getString("sexPatient");
+                p.setSexPatient(sexStr == null ? null : Sex.valueOf(sexStr));
+                p.setPhoneNumberPatient(rs.getInt("phoneNumberPatient"));
+                p.setHealthInsuranceNumberPatient(rs.getInt("healthInsuranceNumberPatient"));
+                p.setEmergencyContactPatient(rs.getInt("emergencyContactPatient"));
+                return p;
+            }
+            return null;
+        }
+    }
 }

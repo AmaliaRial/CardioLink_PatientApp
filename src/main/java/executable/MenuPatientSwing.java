@@ -1,10 +1,9 @@
 package executable;
 
-
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicButtonUI;
 import java.awt.*;
-
+import java.text.SimpleDateFormat;
 
 import jdbc.ConnectionManager;
 import jdbc.JDBCPatientManager;
@@ -18,9 +17,8 @@ public class MenuPatientSwing extends JFrame {
     private final ConnectionManager conMan = new ConnectionManager();
     private final PatientManager patientMan = new JDBCPatientManager(conMan);
 
-
     private final CardLayout cardLayout = new CardLayout();
-    private final JPanel cards = new JPanel(cardLayout); // container for screens
+    private final JPanel cards = new JPanel(cardLayout); // contenedor de pantallas
 
     public MenuPatientSwing() {
         super("App for Patients");
@@ -29,11 +27,11 @@ public class MenuPatientSwing extends JFrame {
 
     private void initUI() {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(680, 520);
+        setSize(720, 560);
         setLocationRelativeTo(null);
         setLayout(new BorderLayout());
 
-
+        // Barra superior
         JPanel topBar = new JPanel(new BorderLayout());
         topBar.setBackground(new Color(171, 191, 234));
         topBar.setBorder(BorderFactory.createEmptyBorder(6, 6, 6, 6));
@@ -54,7 +52,7 @@ public class MenuPatientSwing extends JFrame {
         topBar.add(leftWrap, BorderLayout.WEST);
         add(topBar, BorderLayout.NORTH);
 
-        // PANTALLA 1
+        // PANTALLA 1 - Home
         JPanel home = new JPanel();
         home.setLayout(new BoxLayout(home, BoxLayout.Y_AXIS));
         home.setBackground(new Color(171, 191, 234));
@@ -88,7 +86,7 @@ public class MenuPatientSwing extends JFrame {
         home.add(btnContinue);
         home.add(Box.createVerticalGlue());
 
-        // PANTALLA 2
+        // PANTALLA 2 - Auth
         JPanel auth = new JPanel();
         auth.setLayout(new BoxLayout(auth, BoxLayout.Y_AXIS));
         auth.setBackground(new Color(171, 191, 234));
@@ -125,13 +123,16 @@ public class MenuPatientSwing extends JFrame {
         btnBackHome.addActionListener(e -> cardLayout.show(cards, "home"));
 
         auth.add(Box.createVerticalGlue());
-        auth.add(choose);               auth.add(Box.createRigidArea(new Dimension(0, 18)));
-        auth.add(btnLogin);             auth.add(Box.createRigidArea(new Dimension(0, 10)));
-        auth.add(btnRegister);          auth.add(Box.createRigidArea(new Dimension(0, 18)));
+        auth.add(choose);
+        auth.add(Box.createRigidArea(new Dimension(0, 18)));
+        auth.add(btnLogin);
+        auth.add(Box.createRigidArea(new Dimension(0, 10)));
+        auth.add(btnRegister);
+        auth.add(Box.createRigidArea(new Dimension(0, 18)));
         auth.add(btnBackHome);
         auth.add(Box.createVerticalGlue());
 
-        //PANTALLA 3
+        // PANTALLA 3 - Login (DNI + Password)
         JPanel login = new JPanel(new GridBagLayout());
         login.setBackground(new Color(171, 191, 234));
         login.setBorder(BorderFactory.createEmptyBorder(24, 36, 24, 36));
@@ -144,17 +145,53 @@ public class MenuPatientSwing extends JFrame {
         g.gridx = 0; g.gridy = 0; g.gridwidth = 3; g.anchor = GridBagConstraints.CENTER;
         login.add(loginTitle, g);
 
-        JTextField loginUser = underlineField(18);
-        JPasswordField loginPass = (JPasswordField) underlineField(new JPasswordField(18));
+        JTextField loginDni = underlineField(18); // DNI
+        JPasswordField loginPass = (JPasswordField) underlineField(new JPasswordField(18)); // Password
 
-        g.gridwidth = 1; g.anchor = GridBagConstraints.WEST;
-        g.gridx = 0; g.gridy = 1; login.add(new JLabel("User Name:"), g);
-        g.gridx = 1; g.gridy = 1; g.weightx = 1.0; login.add(loginUser, g);
+        g.gridwidth = 1; g.anchor = GridBagConstraints.WEST; g.weightx = 0;
+        g.gridx = 0; g.gridy = 1; login.add(new JLabel("DNI:"), g);
+        g.gridx = 1; g.gridy = 1; g.weightx = 1.0; login.add(loginDni, g);
 
         g.gridx = 0; g.gridy = 2; g.weightx = 0; login.add(new JLabel("Password:"), g);
         g.gridx = 1; g.gridy = 2; g.weightx = 1.0; login.add(loginPass, g);
 
         JButton btnLoginContinue = new JButton("Continue");
+        btnLoginContinue.setBackground(new Color(11, 87, 147));
+        btnLoginContinue.setForeground(Color.WHITE);
+        btnLoginContinue.setOpaque(true);
+        btnLoginContinue.setBorderPainted(false);
+        btnLoginContinue.setFocusPainted(false);
+        btnLoginContinue.setUI(new BasicButtonUI());
+        btnLoginContinue.addActionListener(e -> {
+            try {
+                String dni = loginDni.getText().trim();
+                String pass = String.valueOf(loginPass.getPassword()).trim();
+
+                if (dni.isBlank() || pass.isBlank()) {
+                    JOptionPane.showMessageDialog(this,
+                            "Por favor, introduce DNI y contraseña.",
+                            "Faltan datos", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+
+                Patient p = patientMan.getPatientByDniAndPassword(dni, pass);
+                if (p != null) {
+                    JOptionPane.showMessageDialog(this,
+                            "Bienvenido/a " + p.getNamePatient(),
+                            "Login correcto", JOptionPane.INFORMATION_MESSAGE);
+                    cardLayout.show(cards, "bitalino");
+                } else {
+                    JOptionPane.showMessageDialog(this,
+                            "Invalid DNI or password",
+                            "Error de login", JOptionPane.ERROR_MESSAGE);
+                }
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(this,
+                        "Error de base de datos: " + ex.getMessage(),
+                        "Error", JOptionPane.ERROR_MESSAGE);
+                ex.printStackTrace();
+            }
+        });
         g.gridx = 2; g.gridy = 2; g.weightx = 0; g.fill = GridBagConstraints.NONE;
         login.add(btnLoginContinue, g);
 
@@ -172,7 +209,7 @@ public class MenuPatientSwing extends JFrame {
         loginReturn.addActionListener(e -> cardLayout.show(cards, "auth"));
         g.gridy = 5; login.add(loginReturn, g);
 
-        // PANTALLA 4
+        // PANTALLA 4 - Register
         JPanel register = new JPanel(new GridBagLayout());
         register.setBackground(new Color(171, 191, 234));
         register.setBorder(BorderFactory.createEmptyBorder(24, 36, 24, 36));
@@ -185,12 +222,12 @@ public class MenuPatientSwing extends JFrame {
         r.gridx = 0; r.gridy = 0; r.gridwidth = 6; r.anchor = GridBagConstraints.CENTER;
         register.add(regTitle, r);
 
-
         JTextField fName       = underlineField(18); // namePatient
+        fName.setToolTipText("Name and Surname");
         JPasswordField fPassword = (JPasswordField) underlineField(new JPasswordField(18)); // passwordPatient
         JTextField fDni        = underlineField(14); // dniPatient
 
-        // DD / MM / YYYY
+        // Fecha DD/MM/YYYY
         JTextField fDay   = underlineField(2);
         JTextField fMonth = underlineField(2);
         JTextField fYear  = underlineField(4);
@@ -215,9 +252,8 @@ public class MenuPatientSwing extends JFrame {
         int row = 1;
         r.gridwidth = 1; r.anchor = GridBagConstraints.WEST; r.weightx = 0;
 
-        r.gridx = 0; r.gridy = row; register.add(new JLabel("Name:"), r);
+        r.gridx = 0; r.gridy = row; register.add(new JLabel("Name and Surname:"), r);
         r.gridx = 1; r.gridy = row++; r.weightx = 1; r.gridwidth = 5; register.add(fName, r);
-
         r.gridwidth = 1; r.weightx = 0;
         r.gridx = 0; r.gridy = row; register.add(new JLabel("Password:"), r);
         r.gridx = 1; r.gridy = row++; r.weightx = 1; r.gridwidth = 5; register.add(fPassword, r);
@@ -250,7 +286,6 @@ public class MenuPatientSwing extends JFrame {
         r.gridx = 0; r.gridy = row; register.add(new JLabel("Emergency Contact:"), r);
         r.gridx = 1; r.gridy = row++; r.weightx = 1; r.gridwidth = 5; register.add(fEmergency, r);
 
-        // Botones inferiores
         JButton regCancel = new JButton("Cancel");
         JButton regCreate = new JButton("Create Account");
         regCreate.setBackground(new Color(17, 49, 85));
@@ -271,7 +306,7 @@ public class MenuPatientSwing extends JFrame {
         regReturn.addActionListener(e -> cardLayout.show(cards, "auth"));
         r.gridy = ++row; register.add(regReturn, r);
 
-        //Limpieza de campos
+        // Limpieza de campos
         regCancel.addActionListener(e -> {
             fName.setText("");
             fPassword.setText("");
@@ -289,41 +324,33 @@ public class MenuPatientSwing extends JFrame {
         // INSERTAR EN BBDD
         regCreate.addActionListener(e -> {
             try {
-
-                if (fName.getText().isBlank()
-                        || fDni.getText().isBlank()
-                        || String.valueOf(fPassword.getPassword()).isBlank()) {
+                String name = fName.getText().trim();
+                String dni = fDni.getText().trim();
+                String pass = String.valueOf(fPassword.getPassword()).trim();
+                if (name.isBlank() || dni.isBlank() || pass.isBlank()) {
                     JOptionPane.showMessageDialog(this,
-                            "Please fill Name, DNI and Password.",
-                            "Missing data", JOptionPane.WARNING_MESSAGE);
+                            "Nombre, DNI y contraseña son obligatorios.",
+                            "Faltan datos", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
 
-                // Parse de fecha
-                java.util.Date dob = new java.text.SimpleDateFormat("dd/MM/yyyy")
-                        .parse(fDay.getText().trim()+"/"+fMonth.getText().trim()+"/"+fYear.getText().trim());
+                java.util.Date dob = null;
+                String dd = fDay.getText().trim(), mm = fMonth.getText().trim(), yy = fYear.getText().trim();
+                if (!dd.isBlank() && !mm.isBlank() && !yy.isBlank()) {
+                    dob = new SimpleDateFormat("dd/MM/yyyy").parse(dd + "/" + mm + "/" + yy);
+                }
 
-                // Sexo: solo M o F
+                Sex sexVal = null;
                 String sx = fSex.getText().trim();
-                Sex sexVal;
-                if (sx.equalsIgnoreCase("F") || sx.equalsIgnoreCase("Female")) {
-                    sexVal = Sex.FEMALE;
-                } else if (sx.equalsIgnoreCase("M") || sx.equalsIgnoreCase("Male")) {
-                    sexVal = Sex.MALE;
-                } else {
-                    JOptionPane.showMessageDialog(this,
-                            "Sex must be 'M' or 'F'.",
-                            "Invalid value", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
+                if (sx.equalsIgnoreCase("F") || sx.equalsIgnoreCase("Female")) sexVal = Sex.FEMALE;
+                else if (sx.equalsIgnoreCase("M") || sx.equalsIgnoreCase("Male")) sexVal = Sex.MALE;
 
-                // Construcción de Patient (sin id)
                 Patient p = new Patient(
-                        fName.getText().trim(),
-                        fDni.getText().trim(),
+                        name,
+                        dni,
                         dob,
                         fEmail.getText().trim(),
-                        String.valueOf(fPassword.getPassword()),
+                        pass,
                         sexVal,
                         parseIntSafe(fPhone.getText().trim()),
                         parseIntSafe(fInsurance.getText().trim()),
@@ -331,28 +358,52 @@ public class MenuPatientSwing extends JFrame {
                 );
 
                 patientMan.addPatient(p);
-                JOptionPane.showMessageDialog(this, "Account Created!", "Register",
+                JOptionPane.showMessageDialog(this, "¡Cuenta creada!", "Registro",
                         JOptionPane.INFORMATION_MESSAGE);
 
                 regCancel.doClick();
                 cardLayout.show(cards, "auth");
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(this, "DB error: " + ex.getMessage(),
+                JOptionPane.showMessageDialog(this, "Error de base de datos: " + ex.getMessage(),
                         "Error", JOptionPane.ERROR_MESSAGE);
                 ex.printStackTrace();
             }
         });
 
+        // PANTALLA 5 - Bitalino (con botón Return)
+        JPanel bitalinoPanel = new JPanel(new GridBagLayout());
+        bitalinoPanel.setBackground(new Color(171, 191, 234));
+        GridBagConstraints b = new GridBagConstraints();
+        b.insets = new Insets(20, 20, 20, 20);
+        b.fill = GridBagConstraints.NONE;
 
+        JButton btnRecordBitalino = new JButton("Record Bitalino Signal");
+        btnRecordBitalino.setFont(btnRecordBitalino.getFont().deriveFont(Font.BOLD, 24f));
+        btnRecordBitalino.setBackground(new Color(220, 152, 76)); // Naranja
+        btnRecordBitalino.setForeground(Color.WHITE);
+        btnRecordBitalino.setOpaque(true);
+        btnRecordBitalino.setBorderPainted(false);
+        btnRecordBitalino.setFocusPainted(false);
+        btnRecordBitalino.setPreferredSize(new Dimension(420, 80));
+        b.gridx = 0; b.gridy = 0; b.weightx = 1.0; b.weighty = 1.0; b.anchor = GridBagConstraints.CENTER;
+        bitalinoPanel.add(btnRecordBitalino, b);
+
+        JButton btnBitalinoReturn = new JButton("Return");
+        btnBitalinoReturn.setFocusPainted(false);
+        btnBitalinoReturn.addActionListener(e -> cardLayout.show(cards, "auth"));
+        b.gridx = 0; b.gridy = 1; b.weightx = 0; b.weighty = 0; b.anchor = GridBagConstraints.SOUTH;
+        bitalinoPanel.add(btnBitalinoReturn, b);
+
+        // Añadir pantallas al CardLayout
         cards.add(home, "home");
         cards.add(auth, "auth");
         cards.add(login, "login");
-        cards.add(new JScrollPane(register), "register"); // scroll por si hace falta
+        cards.add(new JScrollPane(register), "register");
+        cards.add(bitalinoPanel, "bitalino");
         add(cards, BorderLayout.CENTER);
 
         cardLayout.show(cards, "home");
     }
-
 
     private static JTextField underlineField(int columns) {
         JTextField f = new JTextField(columns);
@@ -360,13 +411,13 @@ public class MenuPatientSwing extends JFrame {
         f.setOpaque(false);
         return f;
     }
+
     private static JComponent underlineField(JComponent f) {
         f.setBorder(BorderFactory.createMatteBorder(0, 0, 2, 0, new Color(0,0,0,90)));
         f.setOpaque(false);
         return f;
     }
 
-    //
     private static int parseIntSafe(String s) {
         try { return Integer.parseInt(s); } catch (Exception e) { return 0; }
     }

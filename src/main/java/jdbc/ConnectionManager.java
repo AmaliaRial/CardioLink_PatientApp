@@ -8,7 +8,20 @@ public class ConnectionManager {
     private Connection c;
     private PatientManager patientMan;
 
-    public Connection getConnection() { return c; }
+    public Connection getConnection() {
+        try {
+            if (c == null || c.isClosed()) {
+                Class.forName("org.sqlite.JDBC");
+                c = DriverManager.getConnection("jdbc:sqlite:./db/CardioLink.db");
+                c.createStatement().execute("PRAGMA foreign_keys=ON");
+            }
+        } catch (Exception e) {
+            System.out.println("Error reopening the database connection");
+            e.printStackTrace();
+        }
+        return c;
+    }
+
     public PatientManager getPatientMan() { return patientMan; }
 
     public ConnectionManager() {
@@ -31,7 +44,6 @@ public class ConnectionManager {
         }
     }
 
-
     public void ensureSchema() {
         try (Statement st = c.createStatement()) {
             String createTablePatients =
@@ -49,7 +61,6 @@ public class ConnectionManager {
                             ");";
             st.executeUpdate(createTablePatients);
         } catch (SQLException sqlE) {
-
             if (!sqlE.getMessage().toLowerCase().contains("already exists")) {
                 System.out.println("Error creating schema");
                 sqlE.printStackTrace();
