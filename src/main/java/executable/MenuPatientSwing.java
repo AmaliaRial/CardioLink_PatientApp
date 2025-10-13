@@ -52,7 +52,7 @@ public class MenuPatientSwing extends JFrame {
         topBar.add(leftWrap, BorderLayout.WEST);
         add(topBar, BorderLayout.NORTH);
 
-        // PANTALLA 1 - Home
+        // PANTALLA 1
         JPanel home = new JPanel();
         home.setLayout(new BoxLayout(home, BoxLayout.Y_AXIS));
         home.setBackground(new Color(171, 191, 234));
@@ -86,7 +86,7 @@ public class MenuPatientSwing extends JFrame {
         home.add(btnContinue);
         home.add(Box.createVerticalGlue());
 
-        // PANTALLA 2 - Auth
+        // PANTALLA 2
         JPanel auth = new JPanel();
         auth.setLayout(new BoxLayout(auth, BoxLayout.Y_AXIS));
         auth.setBackground(new Color(171, 191, 234));
@@ -132,7 +132,7 @@ public class MenuPatientSwing extends JFrame {
         auth.add(btnBackHome);
         auth.add(Box.createVerticalGlue());
 
-        // PANTALLA 3 - Login (DNI + Password)
+        // PANTALLA 3
         JPanel login = new JPanel(new GridBagLayout());
         login.setBackground(new Color(171, 191, 234));
         login.setBorder(BorderFactory.createEmptyBorder(24, 36, 24, 36));
@@ -370,7 +370,7 @@ public class MenuPatientSwing extends JFrame {
             }
         });
 
-        // PANTALLA 5 - Bitalino (con botón Return)
+        // PANTALLA 5 - BitalinoRecording
         JPanel bitalinoPanel = new JPanel(new GridBagLayout());
         bitalinoPanel.setBackground(new Color(171, 191, 234));
         GridBagConstraints b = new GridBagConstraints();
@@ -394,7 +394,7 @@ public class MenuPatientSwing extends JFrame {
         b.gridx = 0; b.gridy = 1; b.weightx = 0; b.weighty = 0; b.anchor = GridBagConstraints.SOUTH;
         bitalinoPanel.add(btnBitalinoReturn, b);
 
-        // Añadir pantallas al CardLayout
+
         cards.add(home, "home");
         cards.add(auth, "auth");
         cards.add(login, "login");
