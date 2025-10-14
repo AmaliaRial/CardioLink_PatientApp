@@ -9,8 +9,13 @@ public class DiagnosisFile {
     private String medication;
     private LocalDate date;
     private int patientId;
+    private String sensorDataECG;
+    private String sensorDataEDA;
 
-    public DiagnosisFile() {
+    public DiagnosisFile(int id) {
+        this.date=LocalDate.now();
+        this.id = id;
+
     }
 
     public DiagnosisFile(int id, String symptoms, String diagnosis, String medication, LocalDate date, int patientId) {
@@ -70,6 +75,21 @@ public class DiagnosisFile {
         this.patientId = id;
     }
 
+    public String getSensorDataECG() {
+        return sensorDataECG;
+    }
+
+    public void setSensorDataECG(String sensorDataECG) {
+        this.sensorDataECG = sensorDataECG;
+    }
+
+    public String getSensorDataEDA() {
+        return sensorDataEDA;
+    }
+    public void setSensorDataEDA(String sensorDataEDA) {
+        this.sensorDataEDA = sensorDataEDA;
+    }
+
     @Override
     public String toString() {
         return "MedicalRecord{" +
@@ -94,4 +114,5 @@ public class DiagnosisFile {
     public int hashCode() {
         return Objects.hash(id);
     }
+
 }

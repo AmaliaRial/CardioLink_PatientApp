@@ -83,7 +83,7 @@ public class BitalinoManager {
                         int [] sensorData = new int[]{ecg, eda};
                         data.add(sensorData);
 
-                        //patient.receiveData(sensorData);
+                        patient.receiveData(sensorData);
                     }
                 }
 

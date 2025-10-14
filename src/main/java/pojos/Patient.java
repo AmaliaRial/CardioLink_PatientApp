@@ -6,8 +6,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import pojos.Interfaces.PatientInterface;
 
-public class Patient {
+public class Patient implements PatientInterface {
     //Anotaciones Carmen --> Por ahora en la app del paciente se busca por dni y contraseña, porque quiero aclarar con el grupo
     //si el paciente tendrá nombre y apellido o solo nombre. Si buscamos por username o por contraseña. Porque por ahora
     // no pide el username en la app, solo sus datos personales y la contraseña.
@@ -163,4 +164,53 @@ public class Patient {
                 ", diagnosisFile=" + diagnosisList +
                 '}';
     }
+
+    public void addDiagnosisToDiagnosisList(DiagnosisFile diagnosis) {
+        this.diagnosisList.add(diagnosis);
+    }
+
+    public void receiveData(int[] sensorData) {
+        DiagnosisFile diagnosis= new DiagnosisFile(this.idPatient);
+        List<int[]> recordedData = new ArrayList<>();
+
+        recordedData.add(sensorData);
+        String ecgDataString = fromAcquiredIntegerToString(recordedData, 0);
+        String edaDataString = fromAcquiredIntegerToString(recordedData, 1);
+        diagnosis.setSensorDataECG(ecgDataString);
+        diagnosis.setSensorDataEDA(edaDataString);
+        this.addDiagnosisToDiagnosisList(diagnosis);
+
+        System.out.println("Paciente " + this.namePatient + " recibió datos: ECG="
+                + sensorData[0] + " EDA=" + sensorData[1]);
+    }
+
+    @Override
+    public String fromAcquiredIntegerToString(List<int[]> sensorData, int channel) {
+        // Verificación del canal
+        if (channel < 0 || channel > 1) {
+            throw new IllegalArgumentException("El canal debe ser 0 (ECG) o 1 (EDA).");
+        }
+
+        // Crear un StringBuilder para construir el String final
+        StringBuilder sb = new StringBuilder();
+
+        // Iterar sobre la lista de arrays y extraer el valor del canal deseado
+        for (int i = 0; i < sensorData.size(); i++) {
+            int[] frame = sensorData.get(i);
+
+            // Tomar solo el valor del canal seleccionado
+            int value = frame[channel];
+            sb.append(value);
+
+            // Agregar ";" si no es el último valor
+            if (i < sensorData.size() - 1) {
+                sb.append(";");
+            }
+        }
+
+        // Devolver el String final
+        return sb.toString();
+    }
+
+
 }
