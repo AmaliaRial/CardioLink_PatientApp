@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.List;
 
 
 public class BitalinoManager {
@@ -72,22 +73,38 @@ public class BitalinoManager {
                     throw new BITalinoException(BITalinoErrorTypes.DEVICE_NOT_IDLE);
                 }
                 System.out.println("Started recording on A2 (ECG) and A3 (EDA).");
-
+                List<int[]> recordingData= new ArrayList<>();
                 int blockSize = 10;
                 while (isRecording) {
                     Frame[] frames = bitalino.read(blockSize);
 
                     for (Frame frame : frames) {
                         int ecg = frame.analog[0]; // A2
-                        int eda = frame.analog[1]; // A3
+                        /**
+                        int[] ecgList= recordingData.get(0);
+                        int[] newEcgList= new int[ecgList.length +1];
+                        System.arraycopy(ecgList, 0, newEcgList, 0, ecgList.length);
+                        newEcgList[ecgList.length]= ecg;
+                        recordingData.set(0, newEcgList);
+                         **/
+
+                        int eda = frame.analog[1];// A3
+                        /**
+                        int[] edaList= recordingData.get(1);
+                        int[] newEdaList= new int[edaList.length +1];
+                        System.arraycopy(edaList, 0, newEdaList, 0, edaList.length);
+                        newEdaList[edaList.length]= eda;
+                        recordingData.set(0, newEdaList);
+                         **/
+
                         int [] sensorData = new int[]{ecg, eda};
                         data.add(sensorData);
-
-                        patient.receiveData(sensorData);
                     }
                 }
 
                 bitalino.stop();
+                patient.receiveData(recordingData);
+
                 saveDataToFile(fileName, data);
                 System.out.println("Recording stopped and saved to " + fileName);
 

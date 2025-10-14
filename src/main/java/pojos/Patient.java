@@ -117,8 +117,8 @@ public class Patient implements PatientInterface {
     public void setDoctorId(int doctorId) { this.doctorId = doctorId; }
     public int getMACadress() { return MACadress; }
     public void setMACadress(int MACadress) { this.MACadress = MACadress; }
-    public List<DiagnosisFile> getDiagnosisFile() { return diagnosisList; }
-    public void setDiagnosisFile(List<DiagnosisFile> diagnosisList) { this.diagnosisList = diagnosisList; }
+    public List<DiagnosisFile> getDiagnosisList() { return diagnosisList; }
+    public void setDiagnosisList(List<DiagnosisFile> diagnosisList) { this.diagnosisList = diagnosisList; }
 
     @Override
     public boolean equals(Object o) {
@@ -169,19 +169,17 @@ public class Patient implements PatientInterface {
         this.diagnosisList.add(diagnosis);
     }
 
-    public void receiveData(int[] sensorData) {
+    public void receiveData( List<int[]> sensorData) {
         DiagnosisFile diagnosis= new DiagnosisFile(this.idPatient);
-        List<int[]> recordedData = new ArrayList<>();
 
-        recordedData.add(sensorData);
-        String ecgDataString = fromAcquiredIntegerToString(recordedData, 0);
-        String edaDataString = fromAcquiredIntegerToString(recordedData, 1);
+        String ecgDataString = fromAcquiredIntegerToString(sensorData, 0);
+        String edaDataString = fromAcquiredIntegerToString(sensorData, 1);
         diagnosis.setSensorDataECG(ecgDataString);
         diagnosis.setSensorDataEDA(edaDataString);
         this.addDiagnosisToDiagnosisList(diagnosis);
 
         System.out.println("Paciente " + this.namePatient + " recibió datos: ECG="
-                + sensorData[0] + " EDA=" + sensorData[1]);
+                + sensorData.get(0)+ " EDA=" + sensorData.get(1));
     }
 
     @Override
