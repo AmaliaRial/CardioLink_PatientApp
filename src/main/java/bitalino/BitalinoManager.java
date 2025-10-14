@@ -2,6 +2,8 @@ package bitalino;
 
 
 
+import pojos.Patient;
+
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
@@ -52,7 +54,7 @@ public class BitalinoManager {
      * Starts recording ECG (A2) and EDA (A3) signals.
      * Recording continues until stopRecording() is called.
      */
-    public void startRecording(String patientName) throws BITalinoException {
+    public void startRecording(Patient patient) throws BITalinoException {
         if (isRecording) {
             throw new BITalinoException(BITalinoErrorTypes.DEVICE_NOT_IDLE);
         }
@@ -61,7 +63,7 @@ public class BitalinoManager {
         recordingThread = new Thread(() -> {
             ArrayList<int[]> data = new ArrayList<>();
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
-            String fileName = patientName + "_ECG_EDA_" + sdf.format(new Date()) + ".txt";
+            String fileName = patient.getNamePatient() + "_ECG_EDA_" + sdf.format(new Date()) + ".txt";
 
             try {
                 try {
@@ -78,7 +80,10 @@ public class BitalinoManager {
                     for (Frame frame : frames) {
                         int ecg = frame.analog[0]; // A2
                         int eda = frame.analog[1]; // A3
-                        data.add(new int[]{ecg, eda});
+                        int [] sensorData = new int[]{ecg, eda};
+                        data.add(sensorData);
+
+                        //patient.receiveData(sensorData);
                     }
                 }
 
