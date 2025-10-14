@@ -45,9 +45,9 @@ public class Main {
 
                 // 6️⃣ Mostrar datos finales del paciente
                 System.out.println("\nDatos grabados en el paciente:");
-                for (DiagnosisFile diag : patient.getDiagnosisList()) {
-                    System.out.println("ECG: " + diag.getSensorDataECG());
-                    System.out.println("EDA: " + diag.getSensorDataEDA());
-                }
+                DiagnosisFile diag=patient.getDiagnosisList().get(0);
+                System.out.println("ECG: " + diag.getSensorDataECG());
+                System.out.println("EDA: " + diag.getSensorDataEDA());
+
             }
         }
