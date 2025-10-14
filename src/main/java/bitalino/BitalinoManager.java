@@ -73,13 +73,15 @@ public class BitalinoManager {
                     throw new BITalinoException(BITalinoErrorTypes.DEVICE_NOT_IDLE);
                 }
                 System.out.println("Started recording on A2 (ECG) and A3 (EDA).");
-                List<int[]> recordingData= new ArrayList<>();
+                List<Integer> recordingDataECG= new ArrayList<>();
+                List<Integer> recordingDataEDA= new ArrayList<>();
                 int blockSize = 10;
                 while (isRecording) {
                     Frame[] frames = bitalino.read(blockSize);
 
                     for (Frame frame : frames) {
                         int ecg = frame.analog[0]; // A2
+                        recordingDataECG.add(ecg);
                         /**
                         int[] ecgList= recordingData.get(0);
                         int[] newEcgList= new int[ecgList.length +1];
@@ -89,6 +91,7 @@ public class BitalinoManager {
                          **/
 
                         int eda = frame.analog[1];// A3
+                        recordingDataEDA.add(eda);
                         /**
                         int[] edaList= recordingData.get(1);
                         int[] newEdaList= new int[edaList.length +1];
@@ -103,6 +106,12 @@ public class BitalinoManager {
                 }
 
                 bitalino.stop();
+                int[] arrayECG = recordingDataECG.stream().mapToInt(Integer::intValue).toArray();
+                int[] arrayEDA = recordingDataEDA.stream().mapToInt(Integer::intValue).toArray();
+                List<int[]> recordingData= new ArrayList<>();
+                recordingData.add(arrayECG);
+                recordingData.add(arrayEDA);
+
                 patient.receiveData(recordingData);
 
                 saveDataToFile(fileName, data);
