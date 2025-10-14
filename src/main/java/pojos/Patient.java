@@ -23,7 +23,7 @@ public class Patient {
     private int emergencyContactPatient;
     private int doctorId;
     private int MACadress;
-    private List<String> diagnosisFile = new ArrayList<>();
+    private List<DiagnosisFile> diagnosisList = new ArrayList<>();
 
     // Constructor vacío
     public Patient() {
@@ -58,6 +58,40 @@ public class Patient {
         this.emergencyContactPatient = emergencyContact;
     }
 
+    public Patient(String name, String dni, Date dob, String email, String password, Sex sex,
+                   int phoneNumber, int healthInsuranceNumber, int emergencyContact, int doctorId, int MACadress, List<DiagnosisFile> diagnosisList) {
+        this.namePatient = name;
+        this.dniPatient = dni;
+        this.dobPatient = dob;
+        this.emailPatient = email;
+        this.passwordPatient = password;
+        this.sexPatient = sex;
+        this.phoneNumberPatient = phoneNumber;
+        this.healthInsuranceNumberPatient = healthInsuranceNumber;
+        this.emergencyContactPatient = emergencyContact;
+        this.doctorId = doctorId;
+        this.MACadress = MACadress;
+        this.diagnosisList = diagnosisList;
+    }
+
+    // Constructor con id
+    public Patient(int idPatient, String name, String dni, Date dob, String email, String password, Sex sex,
+                   int phoneNumber, int healthInsuranceNumber, int emergencyContact, int doctorId, int MACadress, List<DiagnosisFile> diagnosisList) {
+        this.idPatient = idPatient;
+        this.namePatient = name;
+        this.dniPatient = dni;
+        this.dobPatient = dob;
+        this.emailPatient = email;
+        this.passwordPatient = password;
+        this.sexPatient = sex;
+        this.phoneNumberPatient = phoneNumber;
+        this.healthInsuranceNumberPatient = healthInsuranceNumber;
+        this.emergencyContactPatient = emergencyContact;
+        this.doctorId = doctorId;
+        this.MACadress = MACadress;
+        this.diagnosisList = diagnosisList;
+    }
+
     public int getIdPatient() { return idPatient; }
     public void setIdPatient(int idPatient) { this.idPatient = idPatient; }
     public String getNamePatient() { return namePatient; }
@@ -82,8 +116,8 @@ public class Patient {
     public void setDoctorId(int doctorId) { this.doctorId = doctorId; }
     public int getMACadress() { return MACadress; }
     public void setMACadress(int MACadress) { this.MACadress = MACadress; }
-    public List<String> getDiagnosisFile() { return diagnosisFile; }
-    public void setDiagnosisFile(List<String> diagnosisFile) { this.diagnosisFile = diagnosisFile; }
+    public List<DiagnosisFile> getDiagnosisFile() { return diagnosisList; }
+    public void setDiagnosisFile(List<DiagnosisFile> diagnosisList) { this.diagnosisList = diagnosisList; }
 
     @Override
     public boolean equals(Object o) {
@@ -101,14 +135,14 @@ public class Patient {
                 Objects.equals(emailPatient, patient.emailPatient) &&
                 Objects.equals(passwordPatient, patient.passwordPatient) &&
                 sexPatient == patient.sexPatient &&
-                Objects.equals(diagnosisFile, patient.diagnosisFile);
+                Objects.equals(diagnosisList, patient.diagnosisList);
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(idPatient, namePatient, dniPatient, dobPatient, emailPatient, passwordPatient,
                 sexPatient, phoneNumberPatient, healthInsuranceNumberPatient, emergencyContactPatient,
-                doctorId, MACadress, diagnosisFile);
+                doctorId, MACadress, diagnosisList);
     }
 
     @Override
@@ -126,7 +160,7 @@ public class Patient {
                 ", emergencyContactPatient=" + emergencyContactPatient +
                 ", doctorId=" + doctorId +
                 ", MACadress=" + MACadress +
-                ", diagnosisFile=" + diagnosisFile +
+                ", diagnosisFile=" + diagnosisList +
                 '}';
     }
 }
