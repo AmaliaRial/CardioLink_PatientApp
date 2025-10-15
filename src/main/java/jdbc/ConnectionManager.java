@@ -73,7 +73,7 @@ public class ConnectionManager {
                             "  namePatient TEXT NOT NULL," +
                             "  surnamePatient TEXT," +
                             "  dniPatient TEXT UNIQUE NOT NULL," +
-                            "  dobPatient TEXT NOT NULL," +
+                            "  dobPatient DATE NOT NULL," +
                             "  emailPatient TEXT NOT NULL," +
                             "  passwordPatient TEXT NOT NULL," +
                             "  sexPatient TEXT NOT NULL," +
