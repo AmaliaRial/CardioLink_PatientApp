@@ -1,12 +1,17 @@
 package jdbc;
 
 import jdbcInterfaces.PatientManager;
+import jdbcInterfaces.UserManager;
+
 import java.sql.*;
 
 public class ConnectionManager {
 
     private Connection c;
     private PatientManager patientMan;
+    private UserManager userMan;
+
+
 
     public Connection getConnection() {
         try {
@@ -24,9 +29,12 @@ public class ConnectionManager {
 
     public PatientManager getPatientMan() { return patientMan; }
 
+    public UserManager getUserMan() { return userMan; }
+
     public ConnectionManager() {
         connect();
         patientMan = new JDBCPatientManager(this);
+        userMan = new JDBCUserManager(this);
         ensureSchema();
     }
 
@@ -74,6 +82,15 @@ public class ConnectionManager {
                             "  emergencyContactPatient INTEGER NOT NULL" +
                             ");";
             st.executeUpdate(createTablePatients);
+
+            String createTableUsers =
+                    "CREATE TABLE IF NOT EXISTS users (" +
+                            "  idUser INTEGER PRIMARY KEY AUTOINCREMENT," +
+                            "  username TEXT UNIQUE NOT NULL," +
+                            "  password TEXT NOT NULL," +
+                            "  role TEXT NOT NULL" +
+                            ");";
+            st.executeUpdate(createTableUsers);
         } catch (SQLException sqlE) {
             if (!sqlE.getMessage().toLowerCase().contains("already exists")) {
                 System.out.println("Error creating or updating schema");
