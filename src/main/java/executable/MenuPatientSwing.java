@@ -99,7 +99,7 @@ public class MenuPatientSwing extends JFrame {
         JButton btnLogin = new JButton("Login");
         btnLogin.setAlignmentX(Component.CENTER_ALIGNMENT);
         btnLogin.setFont(btnLogin.getFont().deriveFont(Font.BOLD, 15f));
-        btnLogin.setBackground(new Color(34, 139, 34));
+        btnLogin.setBackground(new Color(205, 103, 106));
         btnLogin.setForeground(Color.WHITE);
         btnLogin.setOpaque(true);
         btnLogin.setBorderPainted(false);
@@ -110,7 +110,7 @@ public class MenuPatientSwing extends JFrame {
         JButton btnRegister = new JButton("Register");
         btnRegister.setAlignmentX(Component.CENTER_ALIGNMENT);
         btnRegister.setFont(btnRegister.getFont().deriveFont(Font.BOLD, 15f));
-        btnRegister.setBackground(new Color(46, 204, 113));
+        btnRegister.setBackground(new Color(221, 14, 96));
         btnRegister.setForeground(Color.WHITE);
         btnRegister.setOpaque(true);
         btnRegister.setBorderPainted(false);
@@ -379,7 +379,7 @@ public class MenuPatientSwing extends JFrame {
 
         JButton btnRecordBitalino = new JButton("Record Bitalino Signal");
         btnRecordBitalino.setFont(btnRecordBitalino.getFont().deriveFont(Font.BOLD, 24f));
-        btnRecordBitalino.setBackground(new Color(220, 152, 76)); // Naranja
+        btnRecordBitalino.setBackground(new Color(182, 118, 45)); // Naranja
         btnRecordBitalino.setForeground(Color.WHITE);
         btnRecordBitalino.setOpaque(true);
         btnRecordBitalino.setBorderPainted(false);
