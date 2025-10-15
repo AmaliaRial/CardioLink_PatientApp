@@ -132,7 +132,7 @@ public class MenuPatientSwing extends JFrame {
         auth.add(btnBackHome);
         auth.add(Box.createVerticalGlue());
 
-        // PANTALLA 3
+        // PANTALLA 3 : LOGIN
         JPanel login = new JPanel(new GridBagLayout());
         login.setBackground(new Color(171, 191, 234));
         login.setBorder(BorderFactory.createEmptyBorder(24, 36, 24, 36));
@@ -145,12 +145,12 @@ public class MenuPatientSwing extends JFrame {
         g.gridx = 0; g.gridy = 0; g.gridwidth = 3; g.anchor = GridBagConstraints.CENTER;
         login.add(loginTitle, g);
 
-        JTextField loginDni = underlineField(18); // DNI
-        JPasswordField loginPass = (JPasswordField) underlineField(new JPasswordField(18)); // Password
+        JTextField loginUsername = underlineField(18); // usernamePatient
+        JPasswordField loginPass = (JPasswordField) underlineField(new JPasswordField(18)); // passwordPatient
 
         g.gridwidth = 1; g.anchor = GridBagConstraints.WEST; g.weightx = 0;
-        g.gridx = 0; g.gridy = 1; login.add(new JLabel("DNI:"), g);
-        g.gridx = 1; g.gridy = 1; g.weightx = 1.0; login.add(loginDni, g);
+        g.gridx = 0; g.gridy = 1; login.add(new JLabel("Username:"), g);
+        g.gridx = 1; g.gridy = 1; g.weightx = 1.0; login.add(loginUsername, g);
 
         g.gridx = 0; g.gridy = 2; g.weightx = 0; login.add(new JLabel("Password:"), g);
         g.gridx = 1; g.gridy = 2; g.weightx = 1.0; login.add(loginPass, g);
@@ -164,17 +164,17 @@ public class MenuPatientSwing extends JFrame {
         btnLoginContinue.setUI(new BasicButtonUI());
         btnLoginContinue.addActionListener(e -> {
             try {
-                String dni = loginDni.getText().trim();
+                String username = loginUsername.getText().trim();
                 String pass = String.valueOf(loginPass.getPassword()).trim();
 
-                if (dni.isBlank() || pass.isBlank()) {
+                if (username.isBlank() || pass.isBlank()) {
                     JOptionPane.showMessageDialog(this,
-                            "Por favor, introduce DNI y contraseña.",
+                            "Por favor, introduce Username y contraseña.",
                             "Faltan datos", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
 
-                Patient p = patientMan.getPatientByDniAndPassword(dni, pass);
+                Patient p = patientMan.getPatientByUsernameAndPassword(username, pass);
                 if (p != null) {
                     JOptionPane.showMessageDialog(this,
                             "Bienvenido/a " + p.getNamePatient(),
@@ -182,7 +182,7 @@ public class MenuPatientSwing extends JFrame {
                     cardLayout.show(cards, "bitalino");
                 } else {
                     JOptionPane.showMessageDialog(this,
-                            "Invalid DNI or password",
+                            "Invalid Username or password",
                             "Error de login", JOptionPane.ERROR_MESSAGE);
                 }
             } catch (Exception ex) {
@@ -209,7 +209,7 @@ public class MenuPatientSwing extends JFrame {
         loginReturn.addActionListener(e -> cardLayout.show(cards, "auth"));
         g.gridy = 5; login.add(loginReturn, g);
 
-        // PANTALLA 4 - Register
+        // PANTALLA 4 : Register
         JPanel register = new JPanel(new GridBagLayout());
         register.setBackground(new Color(171, 191, 234));
         register.setBorder(BorderFactory.createEmptyBorder(24, 36, 24, 36));
@@ -222,8 +222,12 @@ public class MenuPatientSwing extends JFrame {
         r.gridx = 0; r.gridy = 0; r.gridwidth = 6; r.anchor = GridBagConstraints.CENTER;
         register.add(regTitle, r);
 
+        JTextField fUsername   = underlineField(18); // usernamePatient
+        fUsername.setToolTipText("Unique username");
         JTextField fName       = underlineField(18); // namePatient
-        fName.setToolTipText("Name and Surname");
+        fName.setToolTipText("Name");
+        JTextField fSurname    = underlineField(18); // surnamePatient
+        fSurname.setToolTipText("Surname");
         JPasswordField fPassword = (JPasswordField) underlineField(new JPasswordField(18)); // passwordPatient
         JTextField fDni        = underlineField(14); // dniPatient
 
@@ -252,8 +256,17 @@ public class MenuPatientSwing extends JFrame {
         int row = 1;
         r.gridwidth = 1; r.anchor = GridBagConstraints.WEST; r.weightx = 0;
 
-        r.gridx = 0; r.gridy = row; register.add(new JLabel("Name and Surname:"), r);
+        r.gridx = 0; r.gridy = row; register.add(new JLabel("Username:"), r);
+        r.gridx = 1; r.gridy = row++; r.weightx = 1; r.gridwidth = 5; register.add(fUsername, r);
+
+        r.gridwidth = 1; r.weightx = 0;
+        r.gridx = 0; r.gridy = row; register.add(new JLabel("Name:"), r);
         r.gridx = 1; r.gridy = row++; r.weightx = 1; r.gridwidth = 5; register.add(fName, r);
+
+        r.gridwidth = 1; r.weightx = 0;
+        r.gridx = 0; r.gridy = row; register.add(new JLabel("Surname:"), r);
+        r.gridx = 1; r.gridy = row++; r.weightx = 1; r.gridwidth = 5; register.add(fSurname, r);
+
         r.gridwidth = 1; r.weightx = 0;
         r.gridx = 0; r.gridy = row; register.add(new JLabel("Password:"), r);
         r.gridx = 1; r.gridy = row++; r.weightx = 1; r.gridwidth = 5; register.add(fPassword, r);
@@ -308,7 +321,9 @@ public class MenuPatientSwing extends JFrame {
 
         // Limpieza de campos
         regCancel.addActionListener(e -> {
+            fUsername.setText("");
             fName.setText("");
+            fSurname.setText("");
             fPassword.setText("");
             fDni.setText("");
             fDay.setText("");
@@ -324,12 +339,14 @@ public class MenuPatientSwing extends JFrame {
         // INSERTAR EN BBDD
         regCreate.addActionListener(e -> {
             try {
+                String username = fUsername.getText().trim();
                 String name = fName.getText().trim();
+                String surname = fSurname.getText().trim();
                 String dni = fDni.getText().trim();
                 String pass = String.valueOf(fPassword.getPassword()).trim();
-                if (name.isBlank() || dni.isBlank() || pass.isBlank()) {
+                if (username.isBlank() || name.isBlank() || surname.isBlank() || dni.isBlank() || pass.isBlank()) {
                     JOptionPane.showMessageDialog(this,
-                            "Nombre, DNI y contraseña son obligatorios.",
+                            "Username, Name, Surname, DNI y contraseña son obligatorios.",
                             "Faltan datos", JOptionPane.WARNING_MESSAGE);
                     return;
                 }
@@ -346,7 +363,9 @@ public class MenuPatientSwing extends JFrame {
                 else if (sx.equalsIgnoreCase("M") || sx.equalsIgnoreCase("Male")) sexVal = Sex.MALE;
 
                 Patient p = new Patient(
+                        username,
                         name,
+                        surname,
                         dni,
                         dob,
                         fEmail.getText().trim(),
@@ -370,7 +389,7 @@ public class MenuPatientSwing extends JFrame {
             }
         });
 
-        // PANTALLA 5 - BitalinoRecording
+        // PANTALLA 5 : BitalinoRecording
         JPanel bitalinoPanel = new JPanel(new GridBagLayout());
         bitalinoPanel.setBackground(new Color(171, 191, 234));
         GridBagConstraints b = new GridBagConstraints();
@@ -393,7 +412,6 @@ public class MenuPatientSwing extends JFrame {
         btnBitalinoReturn.addActionListener(e -> cardLayout.show(cards, "auth"));
         b.gridx = 0; b.gridy = 1; b.weightx = 0; b.weighty = 0; b.anchor = GridBagConstraints.SOUTH;
         bitalinoPanel.add(btnBitalinoReturn, b);
-
 
         cards.add(home, "home");
         cards.add(auth, "auth");

@@ -46,10 +46,24 @@ public class ConnectionManager {
 
     public void ensureSchema() {
         try (Statement st = c.createStatement()) {
+
+            DatabaseMetaData meta = c.getMetaData();
+            ResultSet rs = meta.getColumns(null, null, "patients", "usernamePatient");
+            if (!rs.next()) {
+                st.executeUpdate("ALTER TABLE patients ADD COLUMN usernamePatient TEXT");
+            }
+            rs = meta.getColumns(null, null, "patients", "surnamePatient");
+            if (!rs.next()) {
+                st.executeUpdate("ALTER TABLE patients ADD COLUMN surnamePatient TEXT");
+            }
+
+
             String createTablePatients =
                     "CREATE TABLE IF NOT EXISTS patients (" +
                             "  idPatient INTEGER PRIMARY KEY AUTOINCREMENT," +
+                            "  usernamePatient TEXT UNIQUE," +
                             "  namePatient TEXT NOT NULL," +
+                            "  surnamePatient TEXT," +
                             "  dniPatient TEXT UNIQUE NOT NULL," +
                             "  dobPatient TEXT NOT NULL," +
                             "  emailPatient TEXT NOT NULL," +
@@ -62,16 +76,19 @@ public class ConnectionManager {
             st.executeUpdate(createTablePatients);
         } catch (SQLException sqlE) {
             if (!sqlE.getMessage().toLowerCase().contains("already exists")) {
-                System.out.println("Error creating schema");
+                System.out.println("Error creating or updating schema");
                 sqlE.printStackTrace();
             }
         }
     }
 
     public void close() {
-        try { if (c != null) c.close(); }
-        catch (SQLException e) {
-            System.out.println("Error closing the database");
+        try {
+            if (c != null && !c.isClosed()) {
+                c.close();
+            }
+        } catch (SQLException e) {
+            System.out.println("Error closing the database connection");
             e.printStackTrace();
         }
     }

@@ -9,11 +9,11 @@ import java.util.Objects;
 import pojos.Interfaces.PatientInterface;
 
 public class Patient implements PatientInterface {
-    //Anotaciones Carmen --> Por ahora en la app del paciente se busca por dni y contraseña, porque quiero aclarar con el grupo
-    //si el paciente tendrá nombre y apellido o solo nombre. Si buscamos por username o por contraseña. Porque por ahora
-    // no pide el username en la app, solo sus datos personales y la contraseña.
+
     private int idPatient;
+    private String usernamePatient;
     private String namePatient;
+    private String surnamePatient;
     private String dniPatient;
     private Date dobPatient;
     private String emailPatient;
@@ -31,9 +31,11 @@ public class Patient implements PatientInterface {
     }
 
     // Constructor sin id
-    public Patient(String name, String dni, Date dob, String email, String password, Sex sex,
+    public Patient(String username, String name,String surname, String dni, Date dob, String email, String password, Sex sex,
                    int phoneNumber, int healthInsuranceNumber, int emergencyContact) {
+        this.usernamePatient = username;
         this.namePatient = name;
+        this.surnamePatient = surname;
         this.dniPatient = dni;
         this.dobPatient = dob;
         this.emailPatient = email;
@@ -45,10 +47,12 @@ public class Patient implements PatientInterface {
     }
 
     // Constructor con id
-    public Patient(int idPatient, String name, String dni, Date dob, String email, String password, Sex sex,
+    public Patient(int idPatient,String username, String name,String surname, String dni, Date dob, String email, String password, Sex sex,
                    int phoneNumber, int healthInsuranceNumber, int emergencyContact) {
         this.idPatient = idPatient;
+        this.usernamePatient= username;
         this.namePatient = name;
+        this.surnamePatient=surname;
         this.dniPatient = dni;
         this.dobPatient = dob;
         this.emailPatient = email;
@@ -59,9 +63,11 @@ public class Patient implements PatientInterface {
         this.emergencyContactPatient = emergencyContact;
     }
 
-    public Patient(String name, String dni, Date dob, String email, String password, Sex sex,
+    public Patient(String name,String username, String surname, String dni, Date dob, String email, String password, Sex sex,
                    int phoneNumber, int healthInsuranceNumber, int emergencyContact, int doctorId, int MACadress, List<DiagnosisFile> diagnosisList) {
         this.namePatient = name;
+        this.usernamePatient=username;
+        this.surnamePatient=surname;
         this.dniPatient = dni;
         this.dobPatient = dob;
         this.emailPatient = email;
@@ -119,6 +125,12 @@ public class Patient implements PatientInterface {
     public void setMACadress(int MACadress) { this.MACadress = MACadress; }
     public List<DiagnosisFile> getDiagnosisList() { return diagnosisList; }
     public void setDiagnosisList(List<DiagnosisFile> diagnosisList) { this.diagnosisList = diagnosisList; }
+
+   //Nuevos getters y setters
+    public String getUsernamePatient() { return usernamePatient; }
+    public void setUsernamePatient(String usernamePatient) { this.usernamePatient = usernamePatient; }
+    public String getSurnamePatient() { return surnamePatient; }
+    public void setSurnamePatient(String surnamePatient) { this.surnamePatient = surnamePatient; }
 
     @Override
     public boolean equals(Object o) {
@@ -209,6 +221,7 @@ public class Patient implements PatientInterface {
         // Devolver el String final
         return sb.toString();
     }
+
 
 
 }
