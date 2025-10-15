@@ -20,7 +20,7 @@ public class BitalinoManager {
     private volatile boolean isRecording = false;
     private Thread recordingThread;
 
-    private static final int SAMPLING_RATE = 1000; // Sampling rate in Hz
+    private static final int SAMPLING_RATE = 100; // Sampling rate in Hz
     private static final int[] CHANNELS = {1, 2}; // Channels to acquire (A2 ECG and A3 EDA)
 
     public BitalinoManager() {
@@ -28,6 +28,11 @@ public class BitalinoManager {
     }
 
     // Method to validate a MAC address (e.g. "20:16:07:18:17:86")
+    /**
+     * Validates the format of a MAC address.
+     * @param macAddress The MAC address string to validate.
+     * @return true if the MAC address is valid, false otherwise.
+     */
     public static boolean isValidMacAddress(String macAddress) {
         // Regular expression for MAC address format
         String macPattern = "^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$";
@@ -36,6 +41,8 @@ public class BitalinoManager {
 
     /**
      * Opens the Bluetooth connection to the BITalino device.
+     * @param macAddress The MAC address of the BITalino device.
+     * @throws BITalinoException if the MAC address is invalid or connection fails.
      */
     public void connect(String macAddress) throws BITalinoException {
         if (!isValidMacAddress(macAddress)) {
@@ -52,8 +59,9 @@ public class BitalinoManager {
     }
 
     /**
-     * Starts recording ECG (A2) and EDA (A3) signals.
-     * Recording continues until stopRecording() is called.
+     * Starts recording ECG and EDA data for the specified patient.
+     * @param patient The patient for whom to record data.
+     * @throws BITalinoException if the device is not idle or other errors occur.
      */
     public void startRecording(Patient patient) throws BITalinoException {
         if (isRecording) {
@@ -93,7 +101,7 @@ public class BitalinoManager {
                 saveDataToFile(fileName, data);
                 System.out.println("Recording stopped and saved to " + fileName);
 
-                // TODO: sendDataToServerDatabase(patientName, data);
+                // TODO: sendDataToServerDatabase(patient, data);
 
             } catch (Exception e) {
                 try {
@@ -109,6 +117,7 @@ public class BitalinoManager {
 
     /**
      * Stops the ongoing recording safely.
+     * @throws BITalinoException if the device is not in acquisition mode or other errors occur.
      */
     public void stopRecording() throws BITalinoException {
         if (!isRecording) {
@@ -129,6 +138,9 @@ public class BitalinoManager {
 
     /**
      * Saves the recorded data into a .txt file.
+     * @param fileName The name of the file to save data.
+     * @param data The recorded data as a list of ECG and EDA pairs.
+     * @throws IOException if file writing fails.
      */
     private void saveDataToFile(String fileName, ArrayList<int[]> data) throws IOException {
         try (FileWriter writer = new FileWriter(fileName)) {
@@ -141,6 +153,7 @@ public class BitalinoManager {
 
     /**
      * Disconnects from the BITalino device.
+     * @throws BITalinoException if disconnection fails.
      */
     public void disconnect() throws BITalinoException {
         try {

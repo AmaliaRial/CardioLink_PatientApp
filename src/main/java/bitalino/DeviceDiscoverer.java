@@ -11,6 +11,9 @@ public class DeviceDiscoverer implements DiscoveryListener {
     public String deviceName;
     String inqStatus = null;
 
+    /**
+     * Constructor that initializes the Bluetooth device discovery process.
+     */
     public DeviceDiscoverer() {
         try {
             LocalDevice localDevice = LocalDevice.getLocalDevice();
@@ -22,7 +25,11 @@ public class DeviceDiscoverer implements DiscoveryListener {
             e.printStackTrace();
         }
     }
-
+    /**
+     * Callback method when a device is discovered.
+     * @param remoteDevice The discovered remote device.
+     * @param cod The class of device.
+     */
     public void deviceDiscovered(RemoteDevice remoteDevice, DeviceClass cod) {
         
     	try
@@ -40,6 +47,10 @@ public class DeviceDiscoverer implements DiscoveryListener {
         }
     }
 
+    /**
+     * Callback method when the inquiry is completed.
+     * @param discType The type of completion (completed, terminated, error).
+     */
     public void inquiryCompleted(int discType) 
     {
     
@@ -57,9 +68,19 @@ public class DeviceDiscoverer implements DiscoveryListener {
 	    }
     }
 
+    /**
+     * Callback method when services are discovered.
+     * @param transID
+     * @param servRecord
+     */
     @Override
     public void servicesDiscovered(int transID, ServiceRecord[] servRecord){}
 
+    /**
+     * Callback method when service search is completed.
+     * @param transID
+     * @param respCode
+     */
     @Override
     public void serviceSearchCompleted(int transID, int respCode) {}
 }
