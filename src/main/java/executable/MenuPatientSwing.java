@@ -4,6 +4,8 @@ import javax.swing.*;
 import javax.swing.plaf.basic.BasicButtonUI;
 import java.awt.*;
 import java.text.SimpleDateFormat;
+import java.util.List;
+import java.util.function.Consumer;
 
 import jdbc.ConnectionManager;
 import jdbc.JDBCPatientManager;
@@ -13,12 +15,11 @@ import common.enums.Sex;
 
 public class MenuPatientSwing extends JFrame {
 
-    // Conexión con JDBC
     private final ConnectionManager conMan = new ConnectionManager();
     private final PatientManager patientMan = new JDBCPatientManager(conMan);
 
     private final CardLayout cardLayout = new CardLayout();
-    private final JPanel cards = new JPanel(cardLayout); // contenedor de pantallas
+    private final JPanel cards = new JPanel(cardLayout);
 
     public MenuPatientSwing() {
         super("App for Patients");
@@ -177,13 +178,13 @@ public class MenuPatientSwing extends JFrame {
                 Patient p = patientMan.getPatientByUsernameAndPassword(username, pass);
                 if (p != null) {
                     JOptionPane.showMessageDialog(this,
-                            "Bienvenido/a " + p.getNamePatient(),
+                            "Bienvenido, " + p.getNamePatient() + " " + p.getSurnamePatient() + "!",
                             "Login correcto", JOptionPane.INFORMATION_MESSAGE);
                     cardLayout.show(cards, "bitalino");
                 } else {
                     JOptionPane.showMessageDialog(this,
-                            "Invalid Username or password",
-                            "Error de login", JOptionPane.ERROR_MESSAGE);
+                            "Usuario o contraseña incorrectos.",
+                            "Login fallido", JOptionPane.ERROR_MESSAGE);
                 }
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(this,
@@ -222,14 +223,14 @@ public class MenuPatientSwing extends JFrame {
         r.gridx = 0; r.gridy = 0; r.gridwidth = 6; r.anchor = GridBagConstraints.CENTER;
         register.add(regTitle, r);
 
-        JTextField fUsername   = underlineField(18); // usernamePatient
+        JTextField fUsername   = underlineField(18);
         fUsername.setToolTipText("Unique username");
-        JTextField fName       = underlineField(18); // namePatient
+        JTextField fName       = underlineField(18);
         fName.setToolTipText("Name");
-        JTextField fSurname    = underlineField(18); // surnamePatient
+        JTextField fSurname    = underlineField(18);
         fSurname.setToolTipText("Surname");
-        JPasswordField fPassword = (JPasswordField) underlineField(new JPasswordField(18)); // passwordPatient
-        JTextField fDni        = underlineField(14); // dniPatient
+        JPasswordField fPassword = (JPasswordField) underlineField(new JPasswordField(18));
+        JTextField fDni        = underlineField(14);
 
         // Fecha DD/MM/YYYY
         JTextField fDay   = underlineField(2);
@@ -247,11 +248,11 @@ public class MenuPatientSwing extends JFrame {
         birthdayFields.add(fMonth); birthdayFields.add(new JLabel("/"));
         birthdayFields.add(fYear);
 
-        JTextField fEmail      = underlineField(22); // emailPatient
-        JTextField fSex        = underlineField(6);  // sexPatient (M/F)
-        JTextField fPhone      = underlineField(14); // phoneNumberPatient
-        JTextField fInsurance  = underlineField(20); // healthInsuranceNumberPatient
-        JTextField fEmergency  = underlineField(14); // emergencyContactPatient
+        JTextField fEmail      = underlineField(22);
+        JTextField fSex        = underlineField(6);
+        JTextField fPhone      = underlineField(14);
+        JTextField fInsurance  = underlineField(20);
+        JTextField fEmergency  = underlineField(14);
 
         int row = 1;
         r.gridwidth = 1; r.anchor = GridBagConstraints.WEST; r.weightx = 0;
@@ -319,7 +320,6 @@ public class MenuPatientSwing extends JFrame {
         regReturn.addActionListener(e -> cardLayout.show(cards, "auth"));
         r.gridy = ++row; register.add(regReturn, r);
 
-        // Limpieza de campos
         regCancel.addActionListener(e -> {
             fUsername.setText("");
             fName.setText("");
@@ -336,7 +336,6 @@ public class MenuPatientSwing extends JFrame {
             fEmergency.setText("");
         });
 
-        // INSERTAR EN BBDD
         regCreate.addActionListener(e -> {
             try {
                 String username = fUsername.getText().trim();
@@ -398,7 +397,7 @@ public class MenuPatientSwing extends JFrame {
 
         JButton btnRecordBitalino = new JButton("Record Bitalino Signal");
         btnRecordBitalino.setFont(btnRecordBitalino.getFont().deriveFont(Font.BOLD, 24f));
-        btnRecordBitalino.setBackground(new Color(182, 118, 45)); // Naranja
+        btnRecordBitalino.setBackground(new Color(182, 118, 45));
         btnRecordBitalino.setForeground(Color.WHITE);
         btnRecordBitalino.setOpaque(true);
         btnRecordBitalino.setBorderPainted(false);
@@ -413,14 +412,223 @@ public class MenuPatientSwing extends JFrame {
         b.gridx = 0; b.gridy = 1; b.weightx = 0; b.weighty = 0; b.anchor = GridBagConstraints.SOUTH;
         bitalinoPanel.add(btnBitalinoReturn, b);
 
+        // PANTALLA 6 : Start/Stop/Continue Recording
+        JPanel bitalinoRecordingPanel = new JPanel(new GridBagLayout());
+        bitalinoRecordingPanel.setBackground(new Color(171, 191, 234));
+        GridBagConstraints br = new GridBagConstraints();
+        br.insets = new Insets(20, 20, 20, 20);
+        br.fill = GridBagConstraints.NONE;
+
+
+        JButton btnStart = new JButton("▶️ Start Recording");
+        btnStart.setFont(btnStart.getFont().deriveFont(Font.BOLD, 25f));
+        btnStart.setBackground(new Color(46, 204, 113));
+        btnStart.setForeground(Color.WHITE);
+        btnStart.setOpaque(true);
+        btnStart.setBorderPainted(false);
+        btnStart.setFocusPainted(false);
+        btnStart.setPreferredSize(new Dimension(320, 80));
+
+        JButton btnStop = new JButton("⏹️ Stop Recording");
+        btnStop.setFont(btnStop.getFont().deriveFont(Font.BOLD, 25f));
+        btnStop.setBackground(new Color(231, 76, 60));
+        btnStop.setForeground(Color.WHITE);
+        btnStop.setOpaque(true);
+        btnStop.setBorderPainted(false);
+        btnStop.setFocusPainted(false);
+        btnStop.setPreferredSize(new Dimension(320, 80));
+        btnStop.setEnabled(false);
+
+        JButton btnContinueRec = new JButton("Continue >>");
+        btnContinueRec.setBackground(new Color(11, 87, 147));
+        btnContinueRec.setForeground(Color.BLACK);
+        btnContinueRec.setOpaque(true);
+        btnContinueRec.setBorderPainted(false);
+        btnContinueRec.setFocusPainted(false);
+        btnContinueRec.setEnabled(false);
+
+        JButton btnReturnRec = new JButton("Return");
+
+        btnStart.addActionListener(e -> {
+            btnStart.setEnabled(false);
+            btnStop.setEnabled(true);
+            //para iniciar la grabación
+        });
+
+        btnStop.addActionListener(e -> {
+            btnStop.setEnabled(false);
+            btnStart.setEnabled(true);
+            btnContinueRec.setEnabled(true);
+            //para parar la grabación
+        });
+
+        btnContinueRec.addActionListener(e -> cardLayout.show(cards, "symptomsSelector"));
+
+        btnReturnRec.addActionListener(e -> cardLayout.show(cards, "bitalino"));
+
+        br.gridx = 0; br.gridy = 0;
+        bitalinoRecordingPanel.add(btnStart, br);
+        br.gridx = 1; br.gridy = 0;
+        bitalinoRecordingPanel.add(btnStop, br);
+        br.gridx = 0; br.gridy = 1; br.gridwidth = 2;
+        bitalinoRecordingPanel.add(btnContinueRec, br);
+        br.gridx = 0; br.gridy = 2; br.gridwidth = 2;
+        bitalinoRecordingPanel.add(btnReturnRec, br);
+
+        // PANTALLA 7 : Symptoms Selector
+        JPanel symptomsSelectorPanel = createSymptomsSelectorPanel(list -> {
+            JOptionPane.showMessageDialog(this, "Síntomas guardados: " + String.join(", ", list));
+            cardLayout.show(cards, "bitalino");
+        });
+
+
         cards.add(home, "home");
         cards.add(auth, "auth");
         cards.add(login, "login");
         cards.add(new JScrollPane(register), "register");
         cards.add(bitalinoPanel, "bitalino");
+        cards.add(bitalinoRecordingPanel, "bitalinoRecording");
+        cards.add(symptomsSelectorPanel, "symptomsSelector");
         add(cards, BorderLayout.CENTER);
 
+        // Acción para pasar de pantalla 5 a 6
+        btnRecordBitalino.addActionListener(e -> cardLayout.show(cards, "bitalinoRecording"));
+
         cardLayout.show(cards, "home");
+    }
+
+    //  Add symptoms selector
+    public JPanel createSymptomsSelectorPanel(java.util.function.Consumer<java.util.List<String>> onSave) {
+        final String[] ALL = {
+                "FAINTED", "WEAKNESS", "SHAKENESS", "HEAD PAIN",
+                "PALPITATION", "ARM PAIN", "FIVER", "CHEAST PAIN"
+        };
+        final java.awt.Color CHIP_BG = new java.awt.Color(179, 212, 238);
+        final java.util.Set<String> selected = new java.util.LinkedHashSet<>();
+        final java.util.Map<String, javax.swing.JButton> addBtns = new java.util.HashMap<>();
+
+        JPanel root = new JPanel(new java.awt.BorderLayout(12,12));
+        root.setBorder(new javax.swing.border.EmptyBorder(8,8,8,8));
+
+        JLabel title = new JLabel("Add symptoms", SwingConstants.CENTER);
+        title.setFont(title.getFont().deriveFont(Font.BOLD, 24f));
+        root.add(title, BorderLayout.NORTH);
+
+        final JPanel selectedPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8)) {
+            @Override public Dimension getPreferredSize() {
+                Dimension d = super.getPreferredSize();
+                return new Dimension(d.width, Math.max(80, d.height));
+            }
+        };
+        JLabel lblSel = new JLabel("Selected");
+        JPanel selBox = new JPanel();
+        selBox.setLayout(new BoxLayout(selBox, BoxLayout.Y_AXIS));
+        selBox.add(lblSel);
+        JPanel selBorder = new JPanel(new BorderLayout());
+        selBorder.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.DARK_GRAY),
+                new javax.swing.border.EmptyBorder(6,6,6,6)));
+        selBorder.add(selectedPanel, BorderLayout.CENTER);
+        selBox.add(selBorder);
+
+        final JPanel availablePanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 8));
+        for (String s : ALL) {
+            JButton b = new JButton(s) {
+                @Override protected void paintComponent(Graphics g) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                    g2.setColor(CHIP_BG);
+                    g2.fillRoundRect(0,0,getWidth(),getHeight(),24,24);
+                    g2.dispose();
+                    super.paintComponent(g);
+                }
+            };
+            b.setFocusPainted(false);
+            b.setContentAreaFilled(false);
+            b.setOpaque(false);
+            b.setBorder(new javax.swing.border.EmptyBorder(8,16,8,16));
+            b.setFont(b.getFont().deriveFont(Font.BOLD, 13f));
+            b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            b.addActionListener(e -> {
+                if (selected.add(s)) {
+                    JPanel chip = new JPanel(new GridBagLayout()) {
+                        @Override protected void paintComponent(Graphics g) {
+                            Graphics2D g2 = (Graphics2D) g.create();
+                            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                            g2.setColor(CHIP_BG);
+                            g2.fillRoundRect(0,0,getWidth(),getHeight(),24,24);
+                            g2.dispose();
+                            super.paintComponent(g);
+                        }
+                    };
+                    chip.setOpaque(false);
+                    chip.setBorder(new javax.swing.border.EmptyBorder(6,10,6,6));
+                    JLabel txt = new JLabel(s);
+                    txt.setFont(txt.getFont().deriveFont(Font.BOLD, 13f));
+                    JButton close = new JButton("x");
+                    close.setFocusPainted(false);
+                    close.setMargin(new java.awt.Insets(0,8,0,8));
+                    close.addActionListener(ev -> {
+                        selected.remove(s);
+                        selectedPanel.remove(chip);
+                        selectedPanel.revalidate();
+                        selectedPanel.repaint();
+                        JButton add = addBtns.get(s);
+                        if (add != null) add.setEnabled(true);
+                    });
+                    GridBagConstraints c = new GridBagConstraints();
+                    c.gridx=0; c.insets=new java.awt.Insets(0,0,0,6);
+                    chip.add(txt, c);
+                    c.gridx=1; c.insets=new java.awt.Insets(0,0,0,0);
+                    chip.add(close, c);
+                    selectedPanel.add(chip);
+                    selectedPanel.revalidate();
+                    selectedPanel.repaint();
+                    b.setEnabled(false);
+                }
+            });
+            addBtns.put(s, b);
+            availablePanel.add(b);
+        }
+        JScrollPane scroll = new JScrollPane(availablePanel);
+        scroll.setBorder(BorderFactory.createLineBorder(Color.DARK_GRAY));
+        scroll.getVerticalScrollBar().setUnitIncrement(16);
+
+        JLabel lblAvail = new JLabel("Available");
+        JPanel availBox = new JPanel();
+        availBox.setLayout(new BoxLayout(availBox, BoxLayout.Y_AXIS));
+        availBox.add(lblAvail);
+        JPanel availBorder = new JPanel(new BorderLayout());
+        availBorder.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.DARK_GRAY),
+                new javax.swing.border.EmptyBorder(6,6,6,6)));
+        availBorder.add(scroll, BorderLayout.CENTER);
+        availBox.add(availBorder);
+
+        JButton btnReturn = new JButton("Return");
+        btnReturn.setFont(btnReturn.getFont().deriveFont(Font.BOLD, 14f));
+        btnReturn.addActionListener(e -> cardLayout.show(cards, "bitalinoRecording"));
+
+        JButton btnContinue = new JButton("Continue >>");
+        btnContinue.setFont(btnContinue.getFont().deriveFont(Font.BOLD, 14f));
+        btnContinue.addActionListener(e -> JOptionPane.showMessageDialog(root, "Continuar a la siguiente pantalla"));
+
+        JPanel bottom = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 8));
+        bottom.add(btnReturn);
+        bottom.add(btnContinue);
+
+        JPanel center = new JPanel();
+        center.setLayout(new BoxLayout(center, BoxLayout.Y_AXIS));
+        center.add(selBox);
+        center.add(Box.createVerticalStrut(8));
+        center.add(availBox);
+
+        root.add(center, BorderLayout.CENTER);
+        root.add(bottom, BorderLayout.SOUTH);
+
+        // Ya no hay síntomas preseleccionados
+
+        return root;
     }
 
     private static JTextField underlineField(int columns) {
