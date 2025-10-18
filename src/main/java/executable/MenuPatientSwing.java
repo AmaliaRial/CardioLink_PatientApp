@@ -611,7 +611,7 @@ public class MenuPatientSwing extends JFrame {
 
         JButton btnContinue = new JButton("Continue >>");
         btnContinue.setFont(btnContinue.getFont().deriveFont(Font.BOLD, 14f));
-        btnContinue.addActionListener(e -> JOptionPane.showMessageDialog(root, "Continuar a la siguiente pantalla"));
+        //btnContinue.addActionListener(e -> JOptionPane.showMessageDialog(root, "Continuar a la siguiente pantalla"));
 
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.CENTER, 12, 8));
         bottom.add(btnReturn);
@@ -626,7 +626,6 @@ public class MenuPatientSwing extends JFrame {
         root.add(center, BorderLayout.CENTER);
         root.add(bottom, BorderLayout.SOUTH);
 
-        // Ya no hay síntomas preseleccionados
 
         return root;
     }
