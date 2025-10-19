@@ -1,9 +1,7 @@
 import bitalino.BitalinoManager;
 import jdbc.ConnectionManager;
 import pojos.DiagnosisFile;
-import pojos.Interfaces.ChartStatisticsRecordings;
 import pojos.Patient;
-import pojos.Interfaces.ChartAndStatisticsInterface;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,15 +40,8 @@ public class Main {
 
                 System.out.println("\nDatos grabados en el paciente:");
                 DiagnosisFile diag=patient.getDiagnosisList().get(0);
-                String ECGrecording= diag.getSensorDataECG();
-                String EDArecording= diag.getSensorDataEDA();
-                System.out.println("ECG: " + ECGrecording);
-                System.out.println("EDA: " + EDArecording);
-
-                ChartAndStatisticsInterface chartStatistics = new ChartStatisticsRecordings();
-                chartStatistics.showECGandEDAChartsFromStrings(ECGrecording, EDArecording, 1000);
-
-
+                System.out.println("ECG: " + diag.getSensorDataECG());
+                System.out.println("EDA: " + diag.getSensorDataEDA());
 
             }
         }

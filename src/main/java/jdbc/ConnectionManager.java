@@ -90,6 +90,20 @@ public class ConnectionManager {
                             "  role TEXT NOT NULL" +
                             ");";
             st.executeUpdate(createTableUsers);
+
+            String createTableDiagnosisFile =
+                    "CREATE TABLE IF NOT EXISTS diagnosisFile (" +
+                            "  id INTEGER PRIMARY KEY AUTOINCREMENT," +
+                            "  symptoms TEXT NOT NULL," +
+                            "  diagnosis TEXT NOT NULL," +
+                            "  medication TEXT NOT NULL," +
+                            "  date DATE NOT NULL," +
+                            "  patientId INTEGER UNIQUE NOT NULL," +
+                            "  sensorDataECG TEXT NOT NULL," +
+                            "  sensorDataEDA TEXT NOT NULL," +
+                            ");";
+            st.executeUpdate(createTableDiagnosisFile);
+
         } catch (SQLException sqlE) {
             if (!sqlE.getMessage().toLowerCase().contains("already exists")) {
                 System.out.println("Error creating or updating schema");
