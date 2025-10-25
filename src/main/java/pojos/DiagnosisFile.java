@@ -1,10 +1,11 @@
 package pojos;
 import java.time.LocalDate;
+import java.util.ArrayList;
 import java.util.Objects;
 
 public class DiagnosisFile {
     private int id;
-    private String symptoms;
+    private ArrayList<Symptoms> symptoms;
     private String diagnosis;
     private String medication;
     private LocalDate date;
@@ -18,7 +19,7 @@ public class DiagnosisFile {
 
     }
 
-    public DiagnosisFile(int id, String symptoms, String diagnosis, String medication, LocalDate date, int patientId) {
+    public DiagnosisFile(int id, ArrayList<Symptoms> symptoms, String diagnosis, String medication, LocalDate date, int patientId) {
         this.id = id;
         this.symptoms = symptoms;
         this.diagnosis = diagnosis;
@@ -35,11 +36,11 @@ public class DiagnosisFile {
         this.id = id;
     }
 
-    public String getSymptoms() {
+    public ArrayList<Symptoms> getSymptoms() {
         return symptoms;
     }
 
-    public void setSymptoms(String symptoms) {
+    public void setSymptoms(ArrayList<Symptoms> symptoms) {
         this.symptoms = symptoms;
     }
 

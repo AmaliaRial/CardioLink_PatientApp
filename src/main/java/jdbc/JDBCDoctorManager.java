@@ -6,6 +6,7 @@ import pojos.DiagnosisFile;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
+import java.util.stream.Collectors;
 
 public class JDBCDoctorManager implements DoctorManager {
 
@@ -23,7 +24,9 @@ public class JDBCDoctorManager implements DoctorManager {
             String template = "UPDATE diagnosisFile SET symptoms = ?, diagnosis = ?, medication = ?, date = ?, patientId = ?, WHERE id = ?;";
             PreparedStatement ps;
             ps = c.prepareStatement(template);
-            ps.setString(1, diagnosisFile.getSymptoms());
+            String symptomsSerialized = diagnosisFile.getSymptoms() == null ? null :
+                    diagnosisFile.getSymptoms().stream().map(Object::toString).collect(Collectors.joining(", "));
+            ps.setString(1, symptomsSerialized);
             ps.setString(2, diagnosisFile.getDiagnosis());
             ps.setString(3, diagnosisFile.getMedication());
             ps.setDate(4, java.sql.Date.valueOf(diagnosisFile.getDate()));

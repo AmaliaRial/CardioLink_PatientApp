@@ -1,5 +1,7 @@
 package bitalino;
 
+import pojos.Patient;
+
 import java.util.Scanner;
 
 public class TestBitalinoManager {
@@ -18,12 +20,16 @@ public class TestBitalinoManager {
         System.out.print("Enter BITalino MAC address (e.g., 20:16:07:18:17:86): ");
         String macAddress = scanner.nextLine().trim();
 
+        Patient patient = new Patient();
+
+        patient.setNamePatient(patientName);
+
         try {
             // Connect to the BITalino device
             manager.connect(macAddress);
 
             // Start recording
-            manager.startRecording(patientName); // Uncomment if you have a Patient object
+            manager.startRecording(patient); // Uncomment if you have a Patient object
             System.out.println("Recording started. Press ENTER to stop...");
 
             // Wait for user to hit Enter
