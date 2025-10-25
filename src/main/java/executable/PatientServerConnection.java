@@ -358,7 +358,7 @@ public class PatientServerConnection {
                 System.out.println("Invalid phone. Enter 7-15 digits.");
             }
 
-            // Send SIGNUP command and payload
+            // Send SIGNUP
             out.writeUTF("SIGNUP");
             out.writeUTF(username);
             out.writeUTF(password);
