@@ -24,8 +24,8 @@ public class JDBCPatientManager implements PatientManager {
     public void addPatient(Patient p) throws SQLException {
         String sql = "INSERT INTO patients(" +
                 "namePatient, surnamePatient, dniPatient, dobPatient, emailPatient, " +
-                "sexPatient, phoneNumberPatient, healthInsuranceNumberPatient, emergencyContactPatient, idUser) " +
-                "VALUES (?,?,?,?,?,?,?,?,?,?)";
+                "sexPatient, phoneNumberPatient, healthInsuranceNumberPatient, emergencyContactPatient) " +
+                "VALUES (?,?,?,?,?,?,?,?,?)";
         try (Connection c = conMan.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
 
@@ -42,7 +42,7 @@ public class JDBCPatientManager implements PatientManager {
             ps.setInt(7, p.getPhoneNumberPatient());
             ps.setInt(8, p.getHealthInsuranceNumberPatient());
             ps.setInt(9, p.getEmergencyContactPatient());
-            ps.setInt(10, p.getUserId());
+
             ps.executeUpdate();
         }
     }

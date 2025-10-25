@@ -55,7 +55,16 @@ public class ConnectionManager {
     public void ensureSchema(Connection c) {
         try (Statement st = c.createStatement()) {
 
-            //Create tables FIRST
+
+            String createTableUsers =
+                    "CREATE TABLE IF NOT EXISTS users (" +
+                            "  idUser INTEGER PRIMARY KEY AUTOINCREMENT," +
+                            "  username TEXT UNIQUE NOT NULL," +
+                            "  password TEXT NOT NULL," +
+                            "  role TEXT NOT NULL" +
+                            ");";
+            st.executeUpdate(createTableUsers);
+
             String createTablePatients =
                     "CREATE TABLE IF NOT EXISTS patients (" +
                             "  idPatient INTEGER PRIMARY KEY AUTOINCREMENT," +
@@ -67,18 +76,12 @@ public class ConnectionManager {
                             "  sexPatient TEXT NOT NULL," +
                             "  phoneNumberPatient INTEGER UNIQUE NOT NULL," +
                             "  healthInsuranceNumberPatient INTEGER UNIQUE NOT NULL," +
-                            "  emergencyContactPatient INTEGER NOT NULL" +
+                            "  emergencyContactPatient INTEGER NOT NULL," +
+                            "  userId INTEGER UNIQUE, " +
+                            "  FOREIGN KEY(userId) REFERENCES users(idUser)" +
                             ");";
             st.executeUpdate(createTablePatients);
 
-            String createTableUsers =
-                    "CREATE TABLE IF NOT EXISTS users (" +
-                            "  idUser INTEGER PRIMARY KEY AUTOINCREMENT," +
-                            "  username TEXT UNIQUE NOT NULL," +
-                            "  password TEXT NOT NULL," +
-                            "  role TEXT NOT NULL" +
-                            ");";
-            st.executeUpdate(createTableUsers);
 
             String createTableDiagnosisFile =
                     "CREATE TABLE IF NOT EXISTS diagnosisFile (" +
@@ -98,9 +101,12 @@ public class ConnectionManager {
             DatabaseMetaData meta = c.getMetaData();
             ResultSet rs;
 
-            rs = meta.getColumns(null, null, "patients", "usernamePatient");
+            rs = meta.getColumns(null, null, "patients", "userId");
             if (!rs.next()) {
-                st.executeUpdate("ALTER TABLE patients ADD COLUMN usernamePatient TEXT");
+                // SQLite does not support adding foreign keys in ALTER TABLE,
+                // so we only add the column (relationship logic is handled manually)
+                st.executeUpdate("ALTER TABLE patients ADD COLUMN userId INTEGER UNIQUE");
+                System.out.println("Added userId column to patients table.");
             }
 
             rs = meta.getColumns(null, null, "patients", "surnamePatient");

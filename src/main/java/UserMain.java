@@ -9,7 +9,7 @@ public class UserMain {
 
     public static void main(String[] args) {
         ConnectionManager cm = new ConnectionManager();
-        JDBCUserManager userMan = new JDBCUserManager(cm, PRIVATE_KEY);
+        JDBCUserManager userMan = new JDBCUserManager(cm);
 
         System.out.println("=== RSA ENCRYPTION TEST ===");
 
