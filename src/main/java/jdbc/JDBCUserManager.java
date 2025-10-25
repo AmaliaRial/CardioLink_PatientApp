@@ -1,6 +1,7 @@
 package jdbc;
 
 import jdbcInterfaces.UserManager;
+import pojos.User;
 
 import java.security.MessageDigest;
 import java.sql.*;
@@ -72,6 +73,27 @@ public class JDBCUserManager implements UserManager{
         }
         return false;
     }
+
+    public User getUserByCredentials(String username, String password) throws SQLException {
+        String sql = "SELECT * FROM users WHERE username = ? AND password = ?";
+        try (Connection c = conMan.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setString(1, username);
+            ps.setString(2, password);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                User u = new User();
+                u.setIdUser(rs.getInt("idUser"));
+                u.setUsername(rs.getString("username"));
+                u.setPassword(rs.getString("password"));
+                u.setRole(rs.getString("role"));
+                return u;
+            }
+            return null;
+        }
+    }
+
 
     @Override
     public String getRole(String username) {

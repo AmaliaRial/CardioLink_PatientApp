@@ -9,7 +9,9 @@ import java.util.function.Consumer;
 
 import jdbc.ConnectionManager;
 import jdbc.JDBCPatientManager;
+import jdbc.JDBCUserManager;
 import jdbcInterfaces.PatientManager;
+import jdbcInterfaces.UserManager;
 import pojos.Patient;
 import common.enums.Sex;
 
@@ -17,6 +19,7 @@ public class MenuPatientSwing extends JFrame {
 
     private final ConnectionManager conMan = new ConnectionManager();
     private final PatientManager patientMan = new JDBCPatientManager(conMan);
+    private final UserManager userMan = new JDBCUserManager(conMan);
 
     private final CardLayout cardLayout = new CardLayout();
     private final JPanel cards = new JPanel(cardLayout);
@@ -175,7 +178,13 @@ public class MenuPatientSwing extends JFrame {
                     return;
                 }
 
-                Patient p = patientMan.getPatientByUsernameAndPassword(username, pass);
+                //Patient p = patientMan.getPatientByUsernameAndPassword(username, pass);
+                boolean verified = userMan.verifyPassword(username, pass);
+                Patient p = null;
+                if (verified) {
+                    p = patientMan.get;
+                }
+
                 if (p != null) {
                     JOptionPane.showMessageDialog(this,
                             "Bienvenido, " + p.getNamePatient() + " " + p.getSurnamePatient() + "!",
