@@ -100,7 +100,7 @@ public class ConnectionManager {
                             "  date DATE NOT NULL," +
                             "  patientId INTEGER UNIQUE NOT NULL," +
                             "  sensorDataECG TEXT NOT NULL," +
-                            "  sensorDataEDA TEXT NOT NULL," +
+                            "  sensorDataEDA TEXT NOT NULL" +
                             ");";
             st.executeUpdate(createTableDiagnosisFile);
 
