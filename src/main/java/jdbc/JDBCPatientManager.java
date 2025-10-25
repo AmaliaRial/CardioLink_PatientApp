@@ -24,8 +24,8 @@ public class JDBCPatientManager implements PatientManager {
     public void addPatient(Patient p) throws SQLException {
         String sql = "INSERT INTO patients(" +
                 "namePatient, surnamePatient, dniPatient, dobPatient, emailPatient, " +
-                "sexPatient, phoneNumberPatient, healthInsuranceNumberPatient, emergencyContactPatient) " +
-                "VALUES (?,?,?,?,?,?,?,?,?)";
+                "sexPatient, phoneNumberPatient, healthInsuranceNumberPatient, emergencyContactPatient, idUser) " +
+                "VALUES (?,?,?,?,?,?,?,?,?,?)";
         try (Connection c = conMan.getConnection();
              PreparedStatement ps = c.prepareStatement(sql)) {
 
@@ -42,9 +42,51 @@ public class JDBCPatientManager implements PatientManager {
             ps.setInt(7, p.getPhoneNumberPatient());
             ps.setInt(8, p.getHealthInsuranceNumberPatient());
             ps.setInt(9, p.getEmergencyContactPatient());
+            ps.setInt(10, p.getUserId());
             ps.executeUpdate();
         }
     }
+
+    public Patient getPatientByUserId(int userId) throws SQLException {
+        String sql = "SELECT * FROM patients WHERE userId = ?";
+        try (Connection c = conMan.getConnection();
+             PreparedStatement ps = c.prepareStatement(sql)) {
+            ps.setInt(1, userId);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                String sexStr = rs.getString("sexPatient");
+                Sex sexEnum = null;
+
+                if (sexStr != null) {
+                    try {
+                        // Normalize possible single-letter or full names
+                        if (sexStr.equalsIgnoreCase("M")) sexEnum = Sex.MALE;
+                        else if (sexStr.equalsIgnoreCase("F")) sexEnum = Sex.FEMALE;
+                        else sexEnum = Sex.valueOf(sexStr.toUpperCase());
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("⚠️ Invalid sex value in DB: " + sexStr);
+                    }
+                }
+
+                Patient p = new Patient(rs.getInt("idPatient"),
+                        rs.getString("namePatient"),
+                        rs.getString("surnamePatient"),
+                        rs.getString("dniPatient"),
+                        rs.getDate("dobPatient"),
+                        rs.getString("emailPatient"),
+                        sexEnum,
+                        rs.getInt("phoneNumberPatient"),
+                        rs.getInt("healthInsuranceNumberPatient"),
+                        rs.getInt("emergencyContactPatient"),
+                        rs.getInt("userId"))
+;
+                return p;
+            }
+            return null;
+        }
+    }
+
 
     /*
     USERNAME AND PASSWORDS ARE NO LONGER STORED IN PATIENTS TABLE

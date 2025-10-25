@@ -14,6 +14,7 @@ import jdbcInterfaces.PatientManager;
 import jdbcInterfaces.UserManager;
 import pojos.Patient;
 import common.enums.Sex;
+import pojos.User;
 
 public class MenuPatientSwing extends JFrame {
 
@@ -182,8 +183,10 @@ public class MenuPatientSwing extends JFrame {
                 boolean verified = userMan.verifyPassword(username, pass);
                 Patient p = null;
                 if (verified) {
-                    p = patientMan.get;
+                    User u = userMan.getUserByUsername(username);
+                    p = patientMan.getPatientByUserId(u.getIdUser());
                 }
+
 
                 if (p != null) {
                     JOptionPane.showMessageDialog(this,
@@ -370,6 +373,10 @@ public class MenuPatientSwing extends JFrame {
                 if (sx.equalsIgnoreCase("F") || sx.equalsIgnoreCase("Female")) sexVal = Sex.FEMALE;
                 else if (sx.equalsIgnoreCase("M") || sx.equalsIgnoreCase("Male")) sexVal = Sex.MALE;
 
+                User u = new User(username, pass, "patient");
+
+                int userid = u.getIdUser();
+
                 Patient p = new Patient(
                         name,
                         surname,
@@ -379,7 +386,8 @@ public class MenuPatientSwing extends JFrame {
                         sexVal,
                         parseIntSafe(fPhone.getText().trim()),
                         parseIntSafe(fInsurance.getText().trim()),
-                        parseIntSafe(fEmergency.getText().trim())
+                        parseIntSafe(fEmergency.getText().trim()),
+                        userid
                 );
 
                 patientMan.addPatient(p);
