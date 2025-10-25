@@ -5,6 +5,7 @@ import bitalino.BITalinoException;
 import bitalino.BitalinoManager;
 import bitalino.Frame;
 import pojos.Patient;
+import common.enums.Sex;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -50,6 +51,7 @@ public class PatientMain {
     private static boolean validateDNI(String dni){
         return dni.matches("\\d{8}[A-Z]");
     }
+
 
     private static boolean isValidEmail(String email) {
         if (email == null) return false;
@@ -117,7 +119,7 @@ public class PatientMain {
             socket = new Socket(serverAddress, port);
             outputStream = new DataOutputStream(socket.getOutputStream());
             inputStream = new DataInputStream(socket.getInputStream());
-            System.out.println("Connected to " + serverAddress + "at port" + port);
+            System.out.println("Connected to " + serverAddress + " at port " + port);
 
             outputStream.writeUTF("Patient");
             outputStream.flush();
@@ -197,8 +199,8 @@ public class PatientMain {
                             outputStream.writeUTF("DATA");
                             outputStream.writeInt((int) blockNumber);
                             outputStream.writeInt(f.seq);
-                            outputStream.writeInt(f.analog[0]); // EMG
                             outputStream.writeInt(f.analog[1]); // ECG
+                            outputStream.writeInt(f.analog[2]); // EDA
                             outputStream.flush();
                             blockNumber++;
                         }
@@ -299,11 +301,22 @@ public class PatientMain {
             }
 
             String sex;
+            Sex sexVal;
             while (true) {
-                System.out.print("Sex (M/F/O): ");
-                sex = scanner.nextLine().trim().toUpperCase();
-                if (sex.equals("M") || sex.equals("F") || sex.equals("O")) break;
-                System.out.println("Enter M, F or O (other).");
+                System.out.println("Please, type your sex (MALE/FEMALE):");
+                sex =  scanner.nextLine().trim();
+                if (sex.equalsIgnoreCase("F") || sex.equalsIgnoreCase("Female")) {
+                    sexVal = Sex.FEMALE;
+                    break;
+                }
+                else if (sex.equalsIgnoreCase("M") || sex.equalsIgnoreCase("Male")){
+                    sexVal = Sex.MALE;
+                    break;
+                }
+                else {
+                    System.err.println("Invalid Sex, please select as shown");
+                }
+
             }
 
             String email;
@@ -337,19 +350,27 @@ public class PatientMain {
                 if (!insurance.isEmpty()) break;
                 System.out.println("Insurance number cannot be empty.");
             }
+            String emergencyContact;
+            while (true) {
+                System.out.print("Emergency contact phone (digits only): ");
+                emergencyContact = scanner.nextLine().trim();
+                if (isValidPhone(emergencyContact)) break;
+                System.out.println("Invalid phone. Enter 7-15 digits.");
+            }
 
             // Send SIGNUP command and payload
             out.writeUTF("SIGNUP");
             out.writeUTF(username);
-            out.writeUTF(password); // server must hash+salt before storing
+            out.writeUTF(password);
             out.writeUTF(name);
             out.writeUTF(surname);
             out.writeUTF(birthday);
-            out.writeUTF(sex);
+            out.writeUTF(String.valueOf(sexVal));
             out.writeUTF(email);
             out.writeUTF(phone);
             out.writeUTF(dni);
             out.writeUTF(insurance);
+            out.writeUTF(emergencyContact);
             out.flush();
 
             // Server response
@@ -365,7 +386,7 @@ public class PatientMain {
             }
 
         } catch (IOException e) {
-            System.err.println("I/O error during sign-up: " + e.getMessage());
+            System.err.println("Error during sign-up: " + e.getMessage());
         }
     }
 
