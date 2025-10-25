@@ -2,7 +2,8 @@ package jdbc;
 
 import javax.crypto.Cipher;
 import java.security.*;
-import java.security.spec.*;
+import java.security.spec.PKCS8EncodedKeySpec;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Base64;
 
 public class Encryption {
@@ -46,6 +47,7 @@ public class Encryption {
     }
 
     //TODO: RUN ONCE Encryption.generateKeys() TO GET A KEY PAIR
+    //done in Public_Encryption_Keys.txt
     //Copy the public key for the client and private key for your server.
 
 }

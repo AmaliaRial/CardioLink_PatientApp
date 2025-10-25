@@ -1,6 +1,7 @@
 package jdbc;
 
 import jdbcInterfaces.UserManager;
+
 import java.security.MessageDigest;
 import java.sql.*;
 import java.util.ArrayList;

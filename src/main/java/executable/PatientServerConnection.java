@@ -18,7 +18,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.regex.Pattern;
 
-public class PatientMain {
+public class PatientServerConnection {
 
     private static boolean isValidIPAddress(String ip) {
         if(ip.equalsIgnoreCase("localhost")){

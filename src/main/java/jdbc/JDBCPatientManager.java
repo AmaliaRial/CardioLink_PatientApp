@@ -2,9 +2,12 @@ package jdbc;
 
 import jdbcInterfaces.PatientManager;
 import pojos.Patient;
-import common.enums.Sex;
+import pojos.enums.Sex;
 
-import java.sql.*;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 

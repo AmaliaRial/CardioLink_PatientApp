@@ -11,13 +11,13 @@ import pojos.Interfaces.PatientInterface;
 public class Patient implements PatientInterface {
 
     private int idPatient;
-    private String usernamePatient;
+    //private String usernamePatient;
     private String namePatient;
     private String surnamePatient;
     private String dniPatient;
     private Date dobPatient;
     private String emailPatient;
-    private String passwordPatient;
+    //private String passwordPatient;
     private Sex sexPatient;
     private int phoneNumberPatient;
     private int healthInsuranceNumberPatient;
@@ -31,15 +31,15 @@ public class Patient implements PatientInterface {
     }
 
     // Constructor sin id
-    public Patient(String username, String name,String surname, String dni, Date dob, String email, String password, Sex sex,
+    public Patient(String name,String surname, String dni, Date dob, String email, Sex sex,
                    int phoneNumber, int healthInsuranceNumber, int emergencyContact) {
-        this.usernamePatient = username;
+        //this.usernamePatient = username;
         this.namePatient = name;
         this.surnamePatient = surname;
         this.dniPatient = dni;
         this.dobPatient = dob;
         this.emailPatient = email;
-        this.passwordPatient = password;
+        //this.passwordPatient = password;
         this.sexPatient = sex;
         this.phoneNumberPatient = phoneNumber;
         this.healthInsuranceNumberPatient = healthInsuranceNumber;
@@ -47,31 +47,31 @@ public class Patient implements PatientInterface {
     }
 
     // Constructor con id
-    public Patient(int idPatient,String username, String name,String surname, String dni, Date dob, String email, String password, Sex sex,
+    public Patient(int idPatient,String name,String surname, String dni, Date dob, String email, Sex sex,
                    int phoneNumber, int healthInsuranceNumber, int emergencyContact) {
         this.idPatient = idPatient;
-        this.usernamePatient= username;
+        //this.usernamePatient= username;
         this.namePatient = name;
         this.surnamePatient=surname;
         this.dniPatient = dni;
         this.dobPatient = dob;
         this.emailPatient = email;
-        this.passwordPatient = password;
+        //this.passwordPatient = password;
         this.sexPatient = sex;
         this.phoneNumberPatient = phoneNumber;
         this.healthInsuranceNumberPatient = healthInsuranceNumber;
         this.emergencyContactPatient = emergencyContact;
     }
 
-    public Patient(String name,String username, String surname, String dni, Date dob, String email, String password, Sex sex,
+    public Patient(String name, String surname, String dni, Date dob, String email, Sex sex,
                    int phoneNumber, int healthInsuranceNumber, int emergencyContact, int doctorId, int MACadress, List<DiagnosisFile> diagnosisList) {
         this.namePatient = name;
-        this.usernamePatient=username;
+
         this.surnamePatient=surname;
         this.dniPatient = dni;
         this.dobPatient = dob;
         this.emailPatient = email;
-        this.passwordPatient = password;
+
         this.sexPatient = sex;
         this.phoneNumberPatient = phoneNumber;
         this.healthInsuranceNumberPatient = healthInsuranceNumber;
@@ -82,14 +82,14 @@ public class Patient implements PatientInterface {
     }
 
     // Constructor con id
-    public Patient(int idPatient, String name, String dni, Date dob, String email, String password, Sex sex,
+    public Patient(int idPatient, String name, String dni, Date dob, String email, Sex sex,
                    int phoneNumber, int healthInsuranceNumber, int emergencyContact, int doctorId, int MACadress, List<DiagnosisFile> diagnosisList) {
         this.idPatient = idPatient;
         this.namePatient = name;
         this.dniPatient = dni;
         this.dobPatient = dob;
         this.emailPatient = email;
-        this.passwordPatient = password;
+        ;
         this.sexPatient = sex;
         this.phoneNumberPatient = phoneNumber;
         this.healthInsuranceNumberPatient = healthInsuranceNumber;
@@ -109,8 +109,7 @@ public class Patient implements PatientInterface {
     public void setDobPatient(Date dobPatient) { this.dobPatient = dobPatient; }
     public String getEmailPatient() { return emailPatient; }
     public void setEmailPatient(String emailPatient) { this.emailPatient = emailPatient; }
-    public String getPasswordPatient() { return passwordPatient; }
-    public void setPasswordPatient(String passwordPatient) { this.passwordPatient = passwordPatient; }
+
     public Sex getSexPatient() { return sexPatient; }
     public void setSexPatient(Sex sexPatient) { this.sexPatient = sexPatient; }
     public int getPhoneNumberPatient() { return phoneNumberPatient; }
@@ -127,9 +126,7 @@ public class Patient implements PatientInterface {
     public void setDiagnosisList(List<DiagnosisFile> diagnosisList) { this.diagnosisList = diagnosisList; }
 
    //Nuevos getters y setters
-    public String getUsernamePatient() { return usernamePatient; }
-    public void setUsernamePatient(String usernamePatient) { this.usernamePatient = usernamePatient; }
-    public String getSurnamePatient() { return surnamePatient; }
+       public String getSurnamePatient() { return surnamePatient; }
     public void setSurnamePatient(String surnamePatient) { this.surnamePatient = surnamePatient; }
 
     @Override
@@ -146,14 +143,13 @@ public class Patient implements PatientInterface {
                 Objects.equals(dniPatient, patient.dniPatient) &&
                 Objects.equals(dobPatient, patient.dobPatient) &&
                 Objects.equals(emailPatient, patient.emailPatient) &&
-                Objects.equals(passwordPatient, patient.passwordPatient) &&
                 sexPatient == patient.sexPatient &&
                 Objects.equals(diagnosisList, patient.diagnosisList);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(idPatient, namePatient, dniPatient, dobPatient, emailPatient, passwordPatient,
+        return Objects.hash(idPatient, namePatient, dniPatient, dobPatient, emailPatient,
                 sexPatient, phoneNumberPatient, healthInsuranceNumberPatient, emergencyContactPatient,
                 doctorId, MACadress, diagnosisList);
     }
@@ -166,7 +162,6 @@ public class Patient implements PatientInterface {
                 ", dniPatient='" + dniPatient + '\'' +
                 ", dobPatient=" + dobPatient +
                 ", emailPatient='" + emailPatient + '\'' +
-                ", passwordPatient='" + passwordPatient + '\'' +
                 ", sexPatient=" + sexPatient +
                 ", phoneNumberPatient=" + phoneNumberPatient +
                 ", healthInsuranceNumberPatient=" + healthInsuranceNumberPatient +

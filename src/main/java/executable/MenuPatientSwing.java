@@ -362,13 +362,11 @@ public class MenuPatientSwing extends JFrame {
                 else if (sx.equalsIgnoreCase("M") || sx.equalsIgnoreCase("Male")) sexVal = Sex.MALE;
 
                 Patient p = new Patient(
-                        username,
                         name,
                         surname,
                         dni,
                         dob,
                         fEmail.getText().trim(),
-                        pass,
                         sexVal,
                         parseIntSafe(fPhone.getText().trim()),
                         parseIntSafe(fInsurance.getText().trim()),

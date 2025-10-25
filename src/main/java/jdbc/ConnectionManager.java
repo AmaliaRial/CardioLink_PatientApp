@@ -17,7 +17,7 @@ public class ConnectionManager {
         try {
             if (c == null || c.isClosed()) {
                 Class.forName("org.sqlite.JDBC");
-                c = DriverManager.getConnection("jdbc:sqlite:./db/CardioLink.db");
+                c = DriverManager.getConnection("jdbc:sqlite:CardioLink.db");
                 c.createStatement().execute("PRAGMA foreign_keys=ON");
             }
         } catch (Exception e) {
@@ -35,13 +35,13 @@ public class ConnectionManager {
         connect();
         patientMan = new JDBCPatientManager(this);
         userMan = new JDBCUserManager(this);
-        ensureSchema();
+        ensureSchema(c);
     }
 
     private void connect() {
         try {
             Class.forName("org.sqlite.JDBC");
-            c = DriverManager.getConnection("jdbc:sqlite:./db/CardioLink.db");
+            c = DriverManager.getConnection("jdbc:sqlite:CardioLink.db");
             c.createStatement().execute("PRAGMA foreign_keys=ON");
         } catch (ClassNotFoundException cnfE) {
             System.out.println("Databases libraries not loaded");
@@ -52,24 +52,13 @@ public class ConnectionManager {
         }
     }
 
-    public void ensureSchema() {
+    public void ensureSchema(Connection c) {
         try (Statement st = c.createStatement()) {
 
-            DatabaseMetaData meta = c.getMetaData();
-            ResultSet rs = meta.getColumns(null, null, "patients", "usernamePatient");
-            if (!rs.next()) {
-                st.executeUpdate("ALTER TABLE patients ADD COLUMN usernamePatient TEXT");
-            }
-            rs = meta.getColumns(null, null, "patients", "surnamePatient");
-            if (!rs.next()) {
-                st.executeUpdate("ALTER TABLE patients ADD COLUMN surnamePatient TEXT");
-            }
-
-
+            //Create tables FIRST
             String createTablePatients =
                     "CREATE TABLE IF NOT EXISTS patients (" +
                             "  idPatient INTEGER PRIMARY KEY AUTOINCREMENT," +
-                            "  usernamePatient TEXT UNIQUE NOT NULL," +
                             "  namePatient TEXT NOT NULL," +
                             "  surnamePatient TEXT NOT NULL," +
                             "  dniPatient TEXT UNIQUE NOT NULL," +
@@ -94,21 +83,36 @@ public class ConnectionManager {
             String createTableDiagnosisFile =
                     "CREATE TABLE IF NOT EXISTS diagnosisFile (" +
                             "  id INTEGER PRIMARY KEY AUTOINCREMENT," +
-                            "  symptoms TEXT NOT NULL," +
-                            "  diagnosis TEXT NOT NULL," +
-                            "  medication TEXT NOT NULL," +
+                            "  symptoms TEXT," +
+                            "  diagnosis TEXT," +
+                            "  medication TEXT," +
                             "  date DATE NOT NULL," +
-                            "  patientId INTEGER UNIQUE NOT NULL," +
-                            "  sensorDataECG TEXT NOT NULL," +
-                            "  sensorDataEDA TEXT NOT NULL" +
+                            "  patientId INTEGER NOT NULL," +
+                            "  sensorDataECG TEXT," +
+                            "  sensorDataEDA TEXT," +
+                            "  FOREIGN KEY(patientId) REFERENCES patients(idPatient)" +
                             ");";
             st.executeUpdate(createTableDiagnosisFile);
 
-        } catch (SQLException sqlE) {
-            if (!sqlE.getMessage().toLowerCase().contains("already exists")) {
-                System.out.println("Error creating or updating schema");
-                sqlE.printStackTrace();
+            //Now that tables exist, check columns safely
+            DatabaseMetaData meta = c.getMetaData();
+            ResultSet rs;
+
+            rs = meta.getColumns(null, null, "patients", "usernamePatient");
+            if (!rs.next()) {
+                st.executeUpdate("ALTER TABLE patients ADD COLUMN usernamePatient TEXT");
             }
+
+            rs = meta.getColumns(null, null, "patients", "surnamePatient");
+            if (!rs.next()) {
+                st.executeUpdate("ALTER TABLE patients ADD COLUMN surnamePatient TEXT");
+            }
+
+            System.out.println("Database schema verified successfully.");
+
+        } catch (SQLException sqlE) {
+            System.out.println("Error creating or updating schema");
+            sqlE.printStackTrace();
         }
     }
 
