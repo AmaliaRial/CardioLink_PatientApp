@@ -15,16 +15,18 @@ public class Doctor {
     private String emailDoctor;
     // private String passwordDoctor;
     private Sex sexDoctor;
-    private List<Patient> assignedPatients;
+    private List<Patient> assignedPatients = new ArrayList<>();
+    private int id;
 
-    public Doctor(int id, String name, String dni, Date dob, String email, Sex sex, List<Patient> patients) {
-        this.idDoctor = id;
+    public Doctor(int idDoc, String name, String dni, Date dob, String email, Sex sex, List<Patient> patients, int id) {
+        this.idDoctor = idDoc;
         this.nameDoctor = name;
         this.dniDoctor = dni;
         this.dobDoctor = dob;
         this.emailDoctor = email;
         this.sexDoctor = sex;
         this.assignedPatients = patients;
+        this.id = id;
     }
 
     public String getNameDoctor() {
@@ -51,17 +53,28 @@ public class Doctor {
         return assignedPatients;}
     public void setAssignedPatients(List<Patient> assignedPatients) {
         this.assignedPatients = assignedPatients;}
+    public int getId() {
+        return id;}
+    public void setId(int id){
+        this.id = id;}
 
     @Override
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         Doctor doctor = (Doctor) o;
-        return idDoctor == doctor.idDoctor && Objects.equals(nameDoctor, doctor.nameDoctor) && Objects.equals(dniDoctor, doctor.dniDoctor) && Objects.equals(dobDoctor, doctor.dobDoctor) && Objects.equals(emailDoctor, doctor.emailDoctor) && sexDoctor == doctor.sexDoctor;
+        return idDoctor == doctor.idDoctor &&
+                Objects.equals(nameDoctor, doctor.nameDoctor) &&
+                Objects.equals(dniDoctor, doctor.dniDoctor) &&
+                Objects.equals(dobDoctor, doctor.dobDoctor) &&
+                Objects.equals(emailDoctor, doctor.emailDoctor) &&
+                sexDoctor == doctor.sexDoctor &&
+                Objects.equals(assignedPatients, doctor.assignedPatients) &&
+                id == doctor.id;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(idDoctor, nameDoctor, dniDoctor, dobDoctor, emailDoctor, sexDoctor);
+        return Objects.hash(idDoctor, nameDoctor, dniDoctor, dobDoctor, emailDoctor, sexDoctor, assignedPatients, id);
     }
 
     @Override
@@ -74,6 +87,7 @@ public class Doctor {
                 ", email='" + emailDoctor + '\'' +
                 ", sex=" + sexDoctor +
                 ", assigned Patients=" + assignedPatients +
+                ", id=" + id +
                 '}';
     }
 
