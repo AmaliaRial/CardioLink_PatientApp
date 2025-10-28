@@ -119,7 +119,7 @@ public class JDBCDoctorManager implements DoctorManager {
         }
     }
 
-    @Override
+
     public List<DiagnosisFile> getDiagnosisFilesByPatientId(int patientId) {
         List<DiagnosisFile> diagnosisFiles = new ArrayList<>();
         try {
@@ -148,7 +148,7 @@ public class JDBCDoctorManager implements DoctorManager {
         return diagnosisFiles;
     }
 
-    @Override
+
     public Patient getPatientByHIN(int healthInsuranceNumber) throws SQLException {
         String sql = "SELECT * FROM patients WHERE healthInsuranceNumberPatient = ?";
         try {
