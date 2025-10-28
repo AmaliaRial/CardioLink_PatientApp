@@ -12,10 +12,14 @@ public class DiagnosisFile {
     private int patientId;
     private String sensorDataECG;
     private String sensorDataEDA;
+    private boolean status;
 
     public DiagnosisFile(int id) {
         this.date=LocalDate.now();
         this.id = id;
+
+    }
+    public DiagnosisFile() {
 
     }
 
@@ -26,6 +30,18 @@ public class DiagnosisFile {
         this.medication = medication;
         this.date = date;
         this.patientId= patientId;
+    }
+
+    public DiagnosisFile(int id, ArrayList<Symptoms> symptoms, String diagnosis, String medication, LocalDate date, int patientId, String sensorDataECG, String sensorDataEDA) {
+        this.id = id;
+        this.symptoms = symptoms;
+        this.diagnosis = diagnosis;
+        this.medication = medication;
+        this.date = date;
+        this.patientId= patientId;
+        this.sensorDataECG = sensorDataECG;
+        this.sensorDataEDA = sensorDataEDA;
+        this.status = false;
     }
 
     public int getId() {
@@ -89,6 +105,13 @@ public class DiagnosisFile {
     }
     public void setSensorDataEDA(String sensorDataEDA) {
         this.sensorDataEDA = sensorDataEDA;
+    }
+
+    public boolean getStatus() {
+        return status;
+    }
+    public void setStatus(boolean status) {
+        this.status = status;
     }
 
     @Override
