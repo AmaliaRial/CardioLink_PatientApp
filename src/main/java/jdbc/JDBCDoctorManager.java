@@ -2,6 +2,7 @@ package jdbc;
 
 import jdbcInterfaces.DoctorManager;
 import pojos.DiagnosisFile;
+import pojos.Patient;
 import pojos.Symptoms;
 
 import java.io.FileWriter;
@@ -115,6 +116,79 @@ public class JDBCDoctorManager implements DoctorManager {
             }
 
             System.out.println("Archivo descargado correctamente: " + fileName);
+        }
+    }
+
+    @Override
+    public List<DiagnosisFile> getDiagnosisFilesByPatientId(int patientId) {
+        List<DiagnosisFile> diagnosisFiles = new ArrayList<>();
+        try {
+            String template = "SELECT * FROM diagnosisFile WHERE patientId = ?";
+            PreparedStatement ps = c.prepareStatement(template);
+            ps.setInt(1, patientId);
+            ResultSet rs = ps.executeQuery();
+            while (rs.next()) {
+                DiagnosisFile file = new DiagnosisFile();
+                file.setId(rs.getInt("id"));
+                file.setDiagnosis(rs.getString("diagnosis"));
+                file.setMedication(rs.getString("medication"));
+                file.setDate(rs.getDate("date").toLocalDate());
+                file.setPatientId(rs.getInt("patientId"));
+                file.setSensorDataECG(rs.getString("sensorDataECG"));
+                file.setSensorDataEDA(rs.getString("sensorDataEDA"));
+                file.setStatus(rs.getBoolean("status"));
+                String symptomsStr = rs.getString("symptoms");
+                List<String> symptoms = Arrays.asList(symptomsStr.split(","));
+                diagnosisFiles.add(file);
+            }
+        } catch (SQLException e) {
+            System.out.println("Error in the database");
+            e.printStackTrace();
+        }
+        return diagnosisFiles;
+    }
+
+    @Override
+    public Patient getPatientByHIN(int healthInsuranceNumber) throws SQLException {
+        String sql = "SELECT * FROM patients WHERE healthInsuranceNumberPatient = ?";
+        try {
+            PreparedStatement ps = c.prepareStatement(sql);
+            ps.setInt(1, healthInsuranceNumber);
+            ResultSet rs = ps.executeQuery();
+
+            if (rs.next()) {
+                String sexStr = rs.getString("sexPatient");
+                common.enums.Sex sexEnum = null;
+
+                if (sexStr != null) {
+                    try {
+                        // Normalize possible single-letter or full names
+                        if (sexStr.equalsIgnoreCase("M")) sexEnum = common.enums.Sex.MALE;
+                        else if (sexStr.equalsIgnoreCase("F")) sexEnum = common.enums.Sex.FEMALE;
+                        else sexEnum = common.enums.Sex.valueOf(sexStr.toUpperCase());
+                    } catch (IllegalArgumentException e) {
+                        System.out.println("⚠️ Invalid sex value in DB: " + sexStr);
+                    }
+                }
+
+                Patient p = new Patient(rs.getInt("idPatient"),
+                        rs.getString("namePatient"),
+                        rs.getString("surnamePatient"),
+                        rs.getString("dniPatient"),
+                        rs.getDate("dobPatient"),
+                        rs.getString("emailPatient"),
+                        sexEnum,
+                        rs.getInt("phoneNumberPatient"),
+                        rs.getInt("healthInsuranceNumberPatient"),
+                        rs.getInt("emergencyContactPatient"),
+                        rs.getInt("userId"));
+                return p;
+            }
+            return null;
+        } catch (SQLException e) {
+            System.out.println("Error in the database");
+            e.printStackTrace();
+            return null;
         }
     }
 
