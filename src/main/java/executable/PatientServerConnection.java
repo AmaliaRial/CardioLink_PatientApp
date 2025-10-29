@@ -145,6 +145,8 @@ public class PatientServerConnection {
                 }
             }
 
+            //TODO PATIENT ACCESSS THEIR COMPLETED MEDICAL RECORDS
+
             // Configure MAC address of the bitalino
             bitalino = new BITalino();
             int samplingRate = 1000;
