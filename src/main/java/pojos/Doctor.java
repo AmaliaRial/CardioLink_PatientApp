@@ -10,29 +10,38 @@ import java.util.List;
 public class Doctor {
     private int idDoctor;
     private String nameDoctor;
+    private String surnameDoctor;
     private String dniDoctor;
     private Date dobDoctor;
     private String emailDoctor;
-    // private String passwordDoctor;
     private Sex sexDoctor;
     private List<Patient> assignedPatients = new ArrayList<>();
-    private int id;
+    private String usernameDoctor;
 
-    public Doctor(int idDoc, String name, String dni, Date dob, String email, Sex sex, List<Patient> patients, int id) {
+    public Doctor(int idDoc, String name, String surname, String dni, Date dob, String email, Sex sex, List<Patient> patients, String username) {
         this.idDoctor = idDoc;
         this.nameDoctor = name;
+        this.surnameDoctor = surname;
         this.dniDoctor = dni;
         this.dobDoctor = dob;
         this.emailDoctor = email;
         this.sexDoctor = sex;
         this.assignedPatients = patients;
-        this.id = id;
+        this.usernameDoctor = username;
     }
 
+    public int getIdDoctor() {
+        return idDoctor;}
+    public void setIdDoctor(int idDoctor) {
+        this.idDoctor = idDoctor;}
     public String getNameDoctor() {
         return nameDoctor;}
     public void setNameDoctor(String nameDoctor) {
     this.nameDoctor = nameDoctor;}
+    public String getSurnameDoctor() {
+        return surnameDoctor;}
+    public void setSurnameDoctor(String surnameDoctor) {
+        this.surnameDoctor = surnameDoctor;}
     public String getDniDoctor() {
         return dniDoctor;}
     public void setDniDoctor(String dniDoctor) {
@@ -53,10 +62,10 @@ public class Doctor {
         return assignedPatients;}
     public void setAssignedPatients(List<Patient> assignedPatients) {
         this.assignedPatients = assignedPatients;}
-    public int getId() {
-        return id;}
-    public void setId(int id){
-        this.id = id;}
+    public String getUsernameDoctor() {
+        return usernameDoctor;}
+    public void set(String usernameDoctor){
+        this.usernameDoctor = usernameDoctor;}
 
     @Override
     public boolean equals(Object o) {
@@ -64,17 +73,18 @@ public class Doctor {
         Doctor doctor = (Doctor) o;
         return idDoctor == doctor.idDoctor &&
                 Objects.equals(nameDoctor, doctor.nameDoctor) &&
+                Objects.equals(surnameDoctor, doctor.surnameDoctor) &&
                 Objects.equals(dniDoctor, doctor.dniDoctor) &&
                 Objects.equals(dobDoctor, doctor.dobDoctor) &&
                 Objects.equals(emailDoctor, doctor.emailDoctor) &&
                 sexDoctor == doctor.sexDoctor &&
                 Objects.equals(assignedPatients, doctor.assignedPatients) &&
-                id == doctor.id;
+                Objects.equals(usernameDoctor, doctor.usernameDoctor);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(idDoctor, nameDoctor, dniDoctor, dobDoctor, emailDoctor, sexDoctor, assignedPatients, id);
+        return Objects.hash(idDoctor, nameDoctor, surnameDoctor, dniDoctor, dobDoctor, emailDoctor, sexDoctor, assignedPatients, usernameDoctor);
     }
 
     @Override
@@ -82,12 +92,13 @@ public class Doctor {
         return "Doctor{" +
                 "idDoctor=" + idDoctor +
                 ", name='" + nameDoctor + '\'' +
+                ", surname='" + surnameDoctor + '\'' +
                 ", dni='" + dniDoctor + '\'' +
                 ", dob=" + dobDoctor +
                 ", email='" + emailDoctor + '\'' +
                 ", sex=" + sexDoctor +
                 ", assigned Patients=" + assignedPatients +
-                ", id=" + id +
+                ", username=" + usernameDoctor +
                 '}';
     }
 
