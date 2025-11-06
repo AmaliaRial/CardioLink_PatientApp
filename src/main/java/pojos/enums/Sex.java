@@ -1,4 +1,4 @@
-package common.enums;
+package pojos.enums;
 
 public enum Sex {
     MALE,

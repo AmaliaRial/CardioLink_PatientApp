@@ -5,7 +5,7 @@ import bitalino.BITalinoException;
 import bitalino.BitalinoManager;
 import bitalino.Frame;
 import pojos.Patient;
-import common.enums.Sex;
+import pojos.enums.Sex;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
