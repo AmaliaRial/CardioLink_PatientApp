@@ -20,7 +20,7 @@ public class BitalinoManager {
     private volatile boolean isRecording = false;
     private Thread recordingThread;
 
-    private static final int SAMPLING_RATE = 100; // Sampling rate in Hz
+    private static final int SAMPLING_RATE = 1000; // Sampling rate in Hz
     private static final int[] CHANNELS = {1, 2}; // Channels to acquire (A2 ECG and A3 EDA)
 
     public BitalinoManager() {

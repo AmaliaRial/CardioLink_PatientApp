@@ -5,7 +5,7 @@ import java.util.Objects;
 
 public class DiagnosisFile {
     private int id;
-    private ArrayList<Symptoms> symptoms;
+    private ArrayList<String> symptoms;
     private String diagnosis;
     private String medication;
     private LocalDate date;
@@ -23,7 +23,7 @@ public class DiagnosisFile {
 
     }
 
-    public DiagnosisFile(int id, ArrayList<Symptoms> symptoms, String diagnosis, String medication, LocalDate date, int patientId) {
+    public DiagnosisFile(int id, ArrayList<String> symptoms, String diagnosis, String medication, LocalDate date, int patientId) {
         this.id = id;
         this.symptoms = symptoms;
         this.diagnosis = diagnosis;
@@ -32,7 +32,7 @@ public class DiagnosisFile {
         this.patientId= patientId;
     }
 
-    public DiagnosisFile(int id, ArrayList<Symptoms> symptoms, String diagnosis, String medication, LocalDate date, int patientId, String sensorDataECG, String sensorDataEDA) {
+    public DiagnosisFile(int id, ArrayList<String> symptoms, String diagnosis, String medication, LocalDate date, int patientId, String sensorDataECG, String sensorDataEDA) {
         this.id = id;
         this.symptoms = symptoms;
         this.diagnosis = diagnosis;
@@ -52,11 +52,11 @@ public class DiagnosisFile {
         this.id = id;
     }
 
-    public ArrayList<Symptoms> getSymptoms() {
+    public ArrayList<String> getSymptoms() {
         return symptoms;
     }
 
-    public void setSymptoms(ArrayList<Symptoms> symptoms) {
+    public void setSymptoms(ArrayList<String> symptoms) {
         this.symptoms = symptoms;
     }
 

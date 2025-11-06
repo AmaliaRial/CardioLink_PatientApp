@@ -4,6 +4,7 @@ import pojos.Patient;
 
 import java.util.Scanner;
 
+
 public class TestBitalinoManager {
 
     public static void main(String[] args) {

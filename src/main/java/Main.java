@@ -1,5 +1,5 @@
 import bitalino.BitalinoManager;
-import jdbc.ConnectionManager;
+
 import pojos.DiagnosisFile;
 import pojos.Patient;
 
@@ -8,13 +8,13 @@ import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
-        ConnectionManager cm = new ConnectionManager();
-        System.out.println("Base de datos inicializada correctamente.");
-        cm.close();
+        //ConnectionManager cm = new ConnectionManager();
+        //System.out.println("Base de datos inicializada correctamente.");
+        //cm.close();
 
                 Patient patient = new Patient();
                 BitalinoManager manager = new BitalinoManager();
-                String macAddress = "0C:43:14:24:78:F5";
+                String macAddress = "20:16:07:18:17:86";
                 try {
                     manager.connect(macAddress);
                 } catch (Exception e) {
