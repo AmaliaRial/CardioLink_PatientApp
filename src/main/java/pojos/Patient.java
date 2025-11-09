@@ -1,7 +1,7 @@
 package pojos;
 
 import pojos.Interfaces.PatientInterface;
-import common.enums.Sex;
+import pojos.enums.Sex;
 
 import java.util.ArrayList;
 import java.util.Date;
