@@ -18,4 +18,5 @@ public class Frame {
         /// On %BITalino (r)evolution, the array contents are: I1 I2 O1 O2.
 	public int [] digital = new int[4];
 
+
 }

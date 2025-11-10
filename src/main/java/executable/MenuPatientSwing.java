@@ -9,7 +9,10 @@ import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
 import java.net.Socket;
+import java.net.SocketException;
+import java.net.SocketTimeoutException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
@@ -28,7 +31,6 @@ public class MenuPatientSwing extends JFrame {
 
     private JButton btnLogin;
     private JButton btnRegister;
-
 
     private String macAddress = null;
 
@@ -74,8 +76,7 @@ public class MenuPatientSwing extends JFrame {
             System.exit(0);
         });
 
-
-
+        topBar.add(btnExit, BorderLayout.EAST);
         add(topBar, BorderLayout.NORTH);
 
         // PANTALLA 1: Home
@@ -259,7 +260,7 @@ public class MenuPatientSwing extends JFrame {
         loginReturn.addActionListener(e -> cardLayout.show(cards, "auth"));
         g.gridy = 5; login.add(loginReturn, g);
 
-        // PANTALLA 4 : Register
+        // PANTALLA 4 : Register (mejorada para replicar validaciones del cliente console)
         JPanel register = new JPanel(new GridBagLayout());
         register.setBackground(new Color(171, 191, 234));
         register.setBorder(BorderFactory.createEmptyBorder(24, 36, 24, 36));
@@ -282,7 +283,7 @@ public class MenuPatientSwing extends JFrame {
         JTextField fDni        = underlineField(14);
 
         JTextField fBirthday   = underlineField(10);
-        fBirthday.setToolTipText("yyyy-MM-dd");
+        fBirthday.setToolTipText("yyyy-MM-dd or dd/MM/yyyy");
         fBirthday.setText("yyyy-MM-dd");
 
         JTextField fEmail      = underlineField(22);
@@ -314,7 +315,7 @@ public class MenuPatientSwing extends JFrame {
         r.gridx = 1; r.gridy = row++; r.weightx = 1; r.gridwidth = 5; register.add(fDni, r);
 
         r.gridwidth = 1; r.weightx = 0;
-        r.gridx = 0; r.gridy = row; register.add(new JLabel("Birthday (yyyy-MM-dd):"), r);
+        r.gridx = 0; r.gridy = row; register.add(new JLabel("Birthday (yyyy-MM-dd or dd/MM/yyyy):"), r);
         r.gridx = 1; r.gridy = row++; r.weightx = 1; r.gridwidth = 5; register.add(fBirthday, r);
 
         r.gridwidth = 1; r.weightx = 0;
@@ -326,15 +327,15 @@ public class MenuPatientSwing extends JFrame {
         r.gridx = 1; r.gridy = row++; r.weightx = 1; r.gridwidth = 5; register.add(fSex, r);
 
         r.gridwidth = 1; r.weightx = 0;
-        r.gridx = 0; r.gridy = row; register.add(new JLabel("Phone Number:"), r);
+        r.gridx = 0; r.gridy = row; register.add(new JLabel("Phone Number (7-9 digits):"), r);
         r.gridx = 1; r.gridy = row++; r.weightx = 1; r.gridwidth = 5; register.add(fPhone, r);
 
         r.gridwidth = 1; r.weightx = 0;
-        r.gridx = 0; r.gridy = row; register.add(new JLabel("Health Insurance number:"), r);
+        r.gridx = 0; r.gridy = row; register.add(new JLabel("Health Insurance number (digits up to 10):"), r);
         r.gridx = 1; r.gridy = row++; r.weightx = 1; r.gridwidth = 5; register.add(fInsurance, r);
 
         r.gridwidth = 1; r.weightx = 0;
-        r.gridx = 0; r.gridy = row; register.add(new JLabel("Emergency Contact:"), r);
+        r.gridx = 0; r.gridy = row; register.add(new JLabel("Emergency Contact (7-9 digits):"), r);
         r.gridx = 1; r.gridy = row++; r.weightx = 1; r.gridwidth = 5; register.add(fEmergency, r);
 
         JButton regCancel = new JButton("Cancel");
@@ -375,27 +376,67 @@ public class MenuPatientSwing extends JFrame {
             String username = fUsername.getText().trim();
             String name = fName.getText().trim();
             String surname = fSurname.getText().trim();
-            String dni = fDni.getText().trim();
+            String dni = fDni.getText().trim().replaceAll("[\\s-]", "").toUpperCase();
             String pass = String.valueOf(fPassword.getPassword()).trim();
-            String birthdayIso = fBirthday.getText().trim();
+            String birthdayInput = fBirthday.getText().trim();
             String email = fEmail.getText().trim();
             String sex = fSex.getText().trim();
             String phone = fPhone.getText().trim();
             String insurance = fInsurance.getText().trim();
             String emergency = fEmergency.getText().trim();
 
+            // Validaciones (seguir lógica de PatientServerConnection.performSignUp)
             if (username.isBlank() || name.isBlank() || surname.isBlank() || dni.isBlank() || pass.isBlank()) {
                 JOptionPane.showMessageDialog(this, "Complete required fields", "Warning", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
-            if (!isValidPhone(phone) || !isValidPhone(emergency)) {
-                JOptionPane.showMessageDialog(this, "Teléfonos inválidos. Deben ser 7-15 dígitos.", "Error", JOptionPane.ERROR_MESSAGE);
+            if (pass.length() < 6) {
+                JOptionPane.showMessageDialog(this, "Password must be at least 6 characters", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
-            if (!isValidIsoDate(birthdayIso)) {
-                JOptionPane.showMessageDialog(this, "Fecha de nacimiento inválida. Use yyyy-MM-dd.", "Error", JOptionPane.ERROR_MESSAGE);
+            if (!name.matches("[a-zA-Z ]+")) {
+                JOptionPane.showMessageDialog(this, "Invalid name. Only letters and spaces.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (!surname.matches("[a-zA-Z ]+")) {
+                JOptionPane.showMessageDialog(this, "Invalid surname. Only letters and spaces.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            String birthdayFormatted = formatToJdbcDate(birthdayInput);
+            if (birthdayFormatted == null) {
+                JOptionPane.showMessageDialog(this, "Invalid birthday. Use yyyy-MM-dd or dd/MM/yyyy", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            String sexVal;
+            if (sex.equalsIgnoreCase("F") || sex.equalsIgnoreCase("Female")) sexVal = "FEMALE";
+            else if (sex.equalsIgnoreCase("M") || sex.equalsIgnoreCase("Male")) sexVal = "MALE";
+            else {
+                JOptionPane.showMessageDialog(this, "Invalid sex. Use M or F", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (!isValidEmail(email)) {
+                JOptionPane.showMessageDialog(this, "Invalid email.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (!isValidPhoneForDb(phone) || !isValidPhoneForDb(emergency)) {
+                JOptionPane.showMessageDialog(this, "Phone numbers must be 7-9 digits and fit server integer range.", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (!validateDNI(dni)) {
+                JOptionPane.showMessageDialog(this, "Invalid DNI. Format: 8 digits + uppercase letter (e.g. 12345678A).", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+
+            if (!isValidInsuranceForDb(insurance)) {
+                JOptionPane.showMessageDialog(this, "Invalid insurance number. Digits only up to 10 and fit server integer range.", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
 
@@ -415,8 +456,8 @@ public class MenuPatientSwing extends JFrame {
                         out.writeUTF(pass);
                         out.writeUTF(name);
                         out.writeUTF(surname);
-                        out.writeUTF(birthdayIso);
-                        out.writeUTF(sex);
+                        out.writeUTF(birthdayFormatted);
+                        out.writeUTF(sexVal); // "MALE" or "FEMALE"
                         out.writeUTF(email);
                         out.writeUTF(phone);
                         out.writeUTF(dni);
@@ -424,7 +465,26 @@ public class MenuPatientSwing extends JFrame {
                         out.writeUTF(emergency);
                         out.flush();
 
-                        String response = in.readUTF();
+                        // Esperar respuesta con timeout de 5s (similar a PatientServerConnection)
+                        int previousTimeout = 0;
+                        try {
+                            previousTimeout = socket.getSoTimeout();
+                            socket.setSoTimeout(5000);
+                        } catch (SocketException ignored) {}
+
+                        String response;
+                        try {
+                            response = in.readUTF();
+                        } catch (SocketTimeoutException ste) {
+                            serverMsg = "No response from server within timeout (5s). Revisa el servidor.";
+                            return null;
+                        } catch (IOException eof) {
+                            serverMsg = "Server closed connection unexpectedly (EOF).";
+                            return null;
+                        } finally {
+                            try { socket.setSoTimeout(previousTimeout); } catch (SocketException ignored) {}
+                        }
+
                         if ("ACK".equals(response)) {
                             serverMsg = in.readUTF();
                             success = true;
@@ -691,7 +751,7 @@ public class MenuPatientSwing extends JFrame {
 
     private static boolean isValidEmail(String email) {
         if (email == null) return false;
-        String emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$";
+        String emailRegex = "^[A-Za-z0-9+_.\\-]+@[A-Za-z0-9.\\-]+$";
         return Pattern.matches(emailRegex, email);
     }
 
@@ -700,14 +760,49 @@ public class MenuPatientSwing extends JFrame {
         return phone.matches("\\d{7,15}");
     }
 
-    private static boolean isValidIsoDate(String iso) {
-        if (iso == null) return false;
+    private static boolean isValidPhoneForDb(String phone) {
+        if (phone == null) return false;
+        if (!phone.matches("\\d{7,9}")) return false;
+        return fitsInInt(phone);
+    }
+
+    private static boolean isValidInsuranceForDb(String insurance) {
+        if (insurance == null) return false;
+        if (!insurance.matches("\\d{1,10}")) return false;
+        return fitsInInt(insurance);
+    }
+
+    private static boolean fitsInInt(String s) {
+        if (s == null) return false;
+        s = s.trim();
+        if (!s.matches("\\d+")) return false;
         try {
-            LocalDate.parse(iso, DateTimeFormatter.ISO_LOCAL_DATE);
-            return true;
-        } catch (DateTimeParseException ex) {
+            long v = Long.parseLong(s);
+            return v <= Integer.MAX_VALUE && v >= Integer.MIN_VALUE;
+        } catch (NumberFormatException e) {
             return false;
         }
+    }
+
+    private static boolean validateDNI(String dni) {
+        if (dni == null) return false;
+        return dni.matches("\\d{8}[A-Z]");
+    }
+
+    // Helper: acepta yyyy-MM-dd o dd/MM/yyyy; devuelve yyyy-MM-dd (formato que espera el servidor)
+    private static String formatToJdbcDate(String input) {
+        if (input == null || input.trim().isEmpty()) return null;
+        String s = input.trim();
+        try {
+            LocalDate ld = LocalDate.parse(s, DateTimeFormatter.ISO_LOCAL_DATE);
+            return ld.format(DateTimeFormatter.ISO_LOCAL_DATE);
+        } catch (DateTimeParseException ignored) {}
+        try {
+            DateTimeFormatter alt = DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            LocalDate ld = LocalDate.parse(s, alt);
+            return ld.format(DateTimeFormatter.ISO_LOCAL_DATE);
+        } catch (DateTimeParseException ignored) {}
+        return null;
     }
 
     private static JTextField underlineField(int columns) {
