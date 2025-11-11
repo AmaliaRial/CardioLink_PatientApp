@@ -6,20 +6,19 @@ The project focuses on building a telemedicine application for remote supervisio
 Differentiate user permissions and functionalities based on roles such as patient, doctor, and administrator each with specific permissions and access levels.
 * ### User Authentication
 Secure login system for user authentication and access control.
+
+
+* ### Database Integration
+Use of a relational database instead of plain text files.
+* ### Data Encryption
+Secure transmission of patient data using public-key encryption.
+
 * ### Patient Client Application
 Installed on the patient’s device for data reading and physiological monitoring.
 * ### Hospital Server Application
 Installed at the hospital, storing and managing data from multiple patients using a database.
 * ### Doctor Application
 Enables doctors to review and update patient information remotely.
-
-* ### Database Integration
-Use of a relational database instead of plain text files.
-* ### Data Encryption
-Secure transmission of patient data using public-key encryption.
-* ### Telegram Interface
-Patients and doctors could connect via smartphone apps for notifications or emergency alerts
-
 
 ## Users
 * **Patients**: Symptom reporting form. Physiological Monitoring via Bitalino
@@ -32,4 +31,4 @@ Patients and doctors could connect via smartphone apps for notifications or emer
 * **[Carmen Caballero Herreros](https://github.com/carmeencaballero)**
 * **[Anastasia Ricchiuti](https://github.com/anastasiaricchiuti)**
 ## Conclusion
-CardioLink brings together a team of skilled Biomedical Engineers to develop a 
+CardioLink brings together a team of Biomedical Engineers dedicated to developing reliable telemonitoring solutions for patients with cardiac conditions. Through this project, we aim to enable early detection of cardiac anomalies and promote continuous, personalized care. By facilitating remote monitoring, CardioLink seeks not only to prevent the progression of heart diseases but also to empower patients and healthcare professionals with timely information that can truly make a difference in clinical outcomes.
