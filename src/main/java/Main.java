@@ -40,8 +40,7 @@ public class Main {
 
                 System.out.println("\nDatos grabados en el paciente:");
                 DiagnosisFile diag=patient.getDiagnosisList().get(0);
-                System.out.println("ECG: " + diag.getSensorDataECG());
-                System.out.println("EDA: " + diag.getSensorDataEDA());
+
 
             }
         }
