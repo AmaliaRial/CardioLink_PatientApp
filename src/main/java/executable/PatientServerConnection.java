@@ -320,11 +320,11 @@ public class PatientServerConnection {
             String birthdayInput;
             String birthdayFormatted;
             while (true) {
-                System.out.print("Birthday (accepts yyyy-MM-dd or dd/MM/yyyy): ");
+                System.out.print("Birthday (accepts yyyy-MM-dd or dd-MM-yyyy): ");
                 birthdayInput = scanner.nextLine().trim();
                 birthdayFormatted = formatToJdbcDate(birthdayInput);
                 if (birthdayFormatted != null) break;
-                System.out.println("Invalid date. Use yyyy-MM-dd or dd/MM/yyyy.");
+                System.out.println("Invalid date. Use yyyy-MM-dd or dd-MM-yyyy.");
             }
 
             Sex sexVal;
@@ -370,8 +370,10 @@ public class PatientServerConnection {
             while (true) {
                 System.out.print("Insurance number (digits only, up to 10 digits): ");
                 insurance = scanner.nextLine().trim();
-                if (isValidInsuranceForDb(insurance)) break;
-                System.out.println("Invalid insurance. Enter digits up to 10 characters and ensure it fits server integer range.");
+                //if (insurance) break;
+               // System.out.println("Invalid insurance. Enter digits up to 10 characters and ensure it fits server integer range.");
+                if (!insurance.isEmpty()) break;
+                System.out.println("Insurance number cannot be empty.");
             }
 
             String emergencyContact;
