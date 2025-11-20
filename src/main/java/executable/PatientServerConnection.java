@@ -320,11 +320,11 @@ public class PatientServerConnection {
             String birthdayInput;
             String birthdayFormatted;
             while (true) {
-                System.out.print("Birthday (accepts yyyy-MM-dd or dd-MM-yyyy): ");
+                System.out.print("Birthday (accepts yyyy-MM-dd or dd/MM/yyyy): ");
                 birthdayInput = scanner.nextLine().trim();
                 birthdayFormatted = formatToJdbcDate(birthdayInput);
                 if (birthdayFormatted != null) break;
-                System.out.println("Invalid date. Use yyyy-MM-dd or dd-MM-yyyy.");
+                System.out.println("Invalid date. Use yyyy-MM-dd or dd/MM/yyyy.");
             }
 
             Sex sexVal;
