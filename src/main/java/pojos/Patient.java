@@ -195,8 +195,8 @@ public class Patient implements PatientInterface {
 
         String ecgDataString = fromAcquiredIntegerToString(sensorData, 0);
         String edaDataString = fromAcquiredIntegerToString(sensorData, 1);
-        diagnosis.setSensorDataECG(ecgDataString);
-        diagnosis.setSensorDataEDA(edaDataString);
+        //diagnosis.setSensorDataECG(ecgDataString);
+        //diagnosis.setSensorDataEDA(edaDataString);
         this.addDiagnosisToDiagnosisList(diagnosis);
 
         System.out.println("Paciente " + this.namePatient + " recibió datos: ECG="

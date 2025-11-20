@@ -162,15 +162,25 @@ public class PatientServerConnection {
                     break;
                 }
 
-                // Tell server we are about to start (optional)
+                // 1) Crear DiagnosisFile en el servidor y obtener la primary key
+                int diagnosisFileId = openNewDiagnosisFileOnServer(outputStream, inputStream, username);
+                if (diagnosisFileId <= 0) {
+                    System.err.println("Could not open DiagnosisFile on server. Recording will NOT start.");
+                    continue;
+                }
+
+                // 2) Avisar al servidor de que empezamos a enviar datos para ese DiagnosisFile
                 outputStream.writeUTF("START");
+                outputStream.writeInt(diagnosisFileId);  // enviamos el ID al servidor
                 outputStream.flush();
 
+                // 3) Empezar la grabación con BITalino
                 try {
                     bitalino.open(MACAddress, samplingRate);
                     int[] channelsToAcquire = new int[]{1, 2}; // example channels
                     bitalino.start(channelsToAcquire);
-                    System.out.println("Recording started. Press ENTER to stop recording.");
+                    System.out.println("Recording started for DiagnosisFile ID " + diagnosisFileId +
+                            ". Press ENTER to stop recording.");
                 } catch (Throwable ex) {
                     System.err.println("Error starting BITalino: " + ex.getMessage());
                     try {
@@ -247,8 +257,8 @@ public class PatientServerConnection {
                     try { socket.setSoTimeout(0); } catch (SocketException ignored) {}
                 }
 
-                // After recording stopped: select symptoms
-                sendSymptomsInteractive(scanner, outputStream, inputStream);
+                // After recording stopped: select symptoms for THIS DiagnosisFile
+                sendSymptomsInteractive(scanner, outputStream, inputStream, diagnosisFileId);
 
                 System.out.println("Do you want to record again? (yes/no)");
                 String again = scanner.nextLine().trim().toLowerCase();
@@ -476,9 +486,58 @@ public class PatientServerConnection {
         }
     }
 
+    // --- DiagnosisFile lifecycle (patient side) ---
+    /**
+     * Paso 2 del flujo:
+     *  1) El paciente pide al servidor que cree un nuevo DiagnosisFile
+     *     asociado al usuario logueado.
+     *  2) El servidor lo inserta en la BBDD, obtiene la primary key
+     *     y la devuelve.
+     *
+     * Protocolo propuesto:
+     *  - Enviar:
+     *      "OPEN_NEW_DIAGNOSIS_FILE"
+     *      <UTF username>
+     *      <UTF createdAt (ISO_LOCAL_DATE_TIME)>
+     *  - Recibir OK:
+     *      "DIAGNOSIS_OPENED"
+     *      <int diagnosisFileId>
+     *  - Recibir error:
+     *      "ERROR"
+     *      <UTF mensaje>
+     */
+    private static int openNewDiagnosisFileOnServer(DataOutputStream out,
+                                                    DataInputStream in,
+                                                    String username) {
+        try {
+            out.writeUTF("OPEN_NEW_DIAGNOSIS_FILE");
+            out.writeUTF(username == null ? "" : username);
+
+            String createdAtStr = LocalDateTime.now()
+                    .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME);
+            out.writeUTF(createdAtStr);
+            out.flush();
+
+            String responseType = in.readUTF();
+            if ("DIAGNOSIS_OPENED".equals(responseType)) {
+                int diagnosisId = in.readInt();
+                System.out.println("New DiagnosisFile opened on server with ID = " + diagnosisId);
+                return diagnosisId;
+            } else if ("ERROR".equals(responseType)) {
+                String msg = in.readUTF();
+                System.err.println("Server error while opening DiagnosisFile: " + msg);
+                return -1;
+            } else {
+                System.err.println("Unexpected server response while opening DiagnosisFile: " + responseType);
+                return -1;
+            }
+        } catch (IOException e) {
+            System.err.println("I/O error while opening DiagnosisFile: " + e.getMessage());
+            return -1;
+        }
+    }
+
     // Patient-Server interaction methods !
-
-
     // 1)
     private static int[] getFragmentOfRecording(DataOutputStream out, DataInputStream in, int patientId) {
         try {
@@ -879,9 +938,10 @@ public class PatientServerConnection {
         }
     }
 
-
-
-    private static void sendSymptomsInteractive(Scanner scanner, DataOutputStream out, DataInputStream in) {
+    private static void sendSymptomsInteractive(Scanner scanner,
+                                                DataOutputStream out,
+                                                DataInputStream in,
+                                                int diagnosisFileId) {
         try {
             System.out.println("\nSelect symptoms from the list (IDs). Example input: 1,3,5");
             System.out.println("1 - Pain\n2 - Difficulty holding objects\n3 - Trouble breathing\n4 - Trouble swallowing\n5 - Trouble sleeping\n6 - Fatigue");
@@ -890,6 +950,7 @@ public class PatientServerConnection {
             String[] tokens = line.isEmpty() ? new String[0] : line.split(",");
 
             out.writeUTF("SYMPTOMS");
+            out.writeInt(diagnosisFileId);  // asociamos síntomas a este DiagnosisFile
             out.writeInt(tokens.length);
             for (String t : tokens) {
                 try {
