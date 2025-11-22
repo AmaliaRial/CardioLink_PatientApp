@@ -211,6 +211,7 @@ public class MenuPatientSwing extends JFrame {
         btnLoginContinue.setUI(new BasicButtonUI());
 
         // LOGIN handler
+
         btnLoginContinue.addActionListener(e -> {
             String username = loginUsername.getText().trim();
             String pass = String.valueOf(loginPass.getPassword()).trim();
@@ -221,7 +222,7 @@ public class MenuPatientSwing extends JFrame {
             }
 
             String[] server = askServerHostPortIfNotConnected();
-            if (server == null) return; // usuario canceló o no conectado
+            if (server == null) return;
 
             btnLoginContinue.setEnabled(false);
             new SwingWorker<Void, Void>() {
@@ -232,55 +233,31 @@ public class MenuPatientSwing extends JFrame {
                 protected Void doInBackground() {
                     try {
                         ensureConnectedRetry(server[0], Integer.parseInt(server[1]));
-                        // uso de timeout para no bloquear indefinidamente
-                        try { socket.setSoTimeout(5000); } catch (Exception ignored) {}
+                        socket.setSoTimeout(5000);
 
-                        // Enviar LOGIN (protocolo simple)
+                        // **PROTOCOLO EXACTO: "LOGIN" + username + password**
                         out.writeUTF("LOGIN");
                         out.writeUTF(username);
                         out.writeUTF(pass);
                         out.flush();
 
-                        String status;
-                        try {
-                            status = in.readUTF();
-                        } catch (IOException readEx) {
-                            serverMsg = "No se pudo leer la respuesta del servidor: " + readEx.getMessage();
-                            success = false;
-                            return null;
-                        }
+                        // **RESPUESTA ESPERADA: "LOGIN_RESULT" + boolean + mensaje**
+                        String statusResp = in.readUTF();
 
-                        // Interpretar respuesta con tolerancia
-                        if ("LOGIN_OK".equalsIgnoreCase(status) || "OK".equalsIgnoreCase(status)) {
-                            success = true;
-                            serverMsg = "Login correcto";
-                            // opcional: servidor puede enviar role y userId
-                            try {
-                                String role = in.readUTF(); // si no hay, lanza excepción y se ignora
-                            } catch (IOException ignored) {}
-                            try {
-                                int userId = in.readInt();
-                            } catch (IOException ignored) {}
-                        } else if ("LOGIN_RESULT".equalsIgnoreCase(status)) {
-                            // variante donde el servidor manda LOGIN_RESULT + boolean + message
-                            try {
-                                boolean ok = in.readBoolean();
-                                String msg = in.readUTF();
-                                serverMsg = msg;
-                                success = ok;
-                            } catch (IOException ioe) {
-                                serverMsg = "Malformed LOGIN_RESULT: " + ioe.getMessage();
+                        if ("LOGIN_RESULT".equals(statusResp)) {
+                            boolean ok = false;
+                            try { ok = in.readBoolean(); } catch (EOFException ignored) {}
+                            String msg = "";
+                            try { msg = in.readUTF(); } catch (EOFException ignored) {}
+                            serverMsg = msg;
+                            if (ok) {
+                                success = true;
+                                currentUsername = username; // fijar usuario logueado
+                            } else {
                                 success = false;
                             }
                         } else {
-                            // servidor envía texto de error u otra respuesta
-                            serverMsg = status;
-                            // intentar leer mensaje adicional
-                            try {
-                                String extra = in.readUTF();
-                                if (extra != null && !extra.isBlank()) serverMsg += " - " + extra;
-                            } catch (IOException ignored) {}
-                            success = false;
+                            serverMsg = "Unexpected response: " + statusResp;
                         }
 
                     } catch (SocketTimeoutException ste) {
@@ -297,23 +274,25 @@ public class MenuPatientSwing extends JFrame {
                     return null;
                 }
 
+
                 @Override
                 protected void done() {
                     btnLoginContinue.setEnabled(true);
                     if (success) {
-                        currentUsername = username;
-                        // habilitar opciones de paciente
                         btnRecordBitalino.setEnabled(true);
                         btnLogin.setEnabled(true);
                         btnRegister.setEnabled(false);
-                        JOptionPane.showMessageDialog(MenuPatientSwing.this, serverMsg, "Success", JOptionPane.INFORMATION_MESSAGE);
-                        cardLayout.show(cards, "home");
+                        JOptionPane.showMessageDialog(MenuPatientSwing.this, serverMsg == null ? "Login successful" : serverMsg, "Success", JOptionPane.INFORMATION_MESSAGE);
+                        // Navegar a la pantalla con el botón "Record Bitalino Signal"
+                        cardLayout.show(cards, "bitalino");
                     } else {
                         JOptionPane.showMessageDialog(MenuPatientSwing.this, "Login failed: " + (serverMsg == null ? "unknown" : serverMsg), "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 }
+
             }.execute();
         });
+
 
         g.gridx = 2; g.gridy = 2; g.weightx = 0; g.fill = GridBagConstraints.NONE;
         login.add(btnLoginContinue, g);
@@ -345,18 +324,19 @@ public class MenuPatientSwing extends JFrame {
         r.gridx = 0; r.gridy = 0; r.gridwidth = 6; r.anchor = GridBagConstraints.CENTER;
         register.add(regTitle, r);
 
+
         JTextField fUsername   = underlineField(18);
-        fUsername.setToolTipText("Unique username");
+        JPasswordField fPassword = (JPasswordField) underlineField(new JPasswordField(18));
         JTextField fName       = underlineField(18);
         JTextField fSurname    = underlineField(18);
-        JPasswordField fPassword = (JPasswordField) underlineField(new JPasswordField(18));
-        JTextField fDni        = underlineField(14);
         JTextField fBirthday   = underlineField(10);
-        fBirthday.setToolTipText("yyyy-MM-dd or dd/MM/yyyy");
-        fBirthday.setText("yyyy-MM-dd");
-        JTextField fEmail      = underlineField(22);
+        fBirthday.setToolTipText("dd-MM-yyyy (ej: 31-12-1990)");
+        fBirthday.setText("dd-MM-yyyy");
         JTextField fSex        = underlineField(6);
+        fSex.setToolTipText("MALE o FEMALE");
+        JTextField fEmail      = underlineField(22);
         JTextField fPhone      = underlineField(14);
+        JTextField fDni        = underlineField(14);
         JTextField fInsurance  = underlineField(20);
         JTextField fEmergency  = underlineField(14);
 
@@ -440,6 +420,7 @@ public class MenuPatientSwing extends JFrame {
             fEmergency.setText("");
         });
 
+        // SIGN UP
         regCreate.addActionListener(e -> {
             String username = fUsername.getText().trim();
             String name = fName.getText().trim();
@@ -448,38 +429,40 @@ public class MenuPatientSwing extends JFrame {
             String pass = String.valueOf(fPassword.getPassword()).trim();
             String birthdayInput = fBirthday.getText().trim();
             String email = fEmail.getText().trim();
-            String sex = fSex.getText().trim();
+            String sex = fSex.getText().trim().toUpperCase();
             String phone = fPhone.getText().trim();
             String insurance = fInsurance.getText().trim();
             String emergency = fEmergency.getText().trim();
 
-            if (username.isBlank() || name.isBlank() || surname.isBlank() || dni.isBlank() || pass.isBlank()) {
-                JOptionPane.showMessageDialog(this, "Required fields missing", "Warning", JOptionPane.WARNING_MESSAGE);
+            // Validaciones
+            if (username.isBlank() || name.isBlank() || surname.isBlank() || dni.isBlank() || pass.isBlank() ||
+                    birthdayInput.isBlank() || email.isBlank() || sex.isBlank() || phone.isBlank() ||
+                    insurance.isBlank() || emergency.isBlank()) {
+                JOptionPane.showMessageDialog(this, "All fields are required", "Warning", JOptionPane.WARNING_MESSAGE);
                 return;
             }
             if (pass.length() < 6) {
-                JOptionPane.showMessageDialog(this, "Password too short", "Warning", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            String birthdayFormatted = formatToJdbcDate(birthdayInput);
-            if (birthdayFormatted == null) {
-                JOptionPane.showMessageDialog(this, "Birthday invalid", "Warning", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            if (!isValidEmail(email)) {
-                JOptionPane.showMessageDialog(this, "Email invalid", "Warning", JOptionPane.WARNING_MESSAGE);
-                return;
-            }
-            if (!isValidPhoneForDb(phone) || !isValidPhoneForDb(emergency)) {
-                JOptionPane.showMessageDialog(this, "Phone invalid", "Warning", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Password must be at least 6 characters", "Warning", JOptionPane.WARNING_MESSAGE);
                 return;
             }
             if (!validateDNI(dni)) {
-                JOptionPane.showMessageDialog(this, "DNI invalid", "Warning", JOptionPane.WARNING_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Invalid DNI format. Expected 8 digits + letter (ej: 12345678A)", "Warning", JOptionPane.WARNING_MESSAGE);
                 return;
             }
-            if (!isValidInsuranceForDb(insurance)) {
-                JOptionPane.showMessageDialog(this, "Insurance invalid", "Warning", JOptionPane.WARNING_MESSAGE);
+            if (!isValidEmail(email)) {
+                JOptionPane.showMessageDialog(this, "Invalid email format", "Warning", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            if (!isValidPhone(phone) || !isValidPhone(emergency)) {
+                JOptionPane.showMessageDialog(this, "Invalid phone format (7-15 digits)", "Warning", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            if (!birthdayInput.matches("\\d{2}-\\d{2}-\\d{4}")) {
+                JOptionPane.showMessageDialog(this, "Birthday must be in dd-MM-yyyy format", "Warning", JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            if (!sex.equals("MALE") && !sex.equals("FEMALE")) {
+                JOptionPane.showMessageDialog(this, "Sex must be MALE or FEMALE", "Warning", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
@@ -495,39 +478,33 @@ public class MenuPatientSwing extends JFrame {
                 protected Void doInBackground() {
                     try {
                         ensureConnectedRetry(server[0], Integer.parseInt(server[1]));
-                        out.writeUTF("REGISTER");
+
+                        // **PROTOCOLO EXACTO: "SIGNUP" + campos en ORDEN ESPECÍFICO**
+                        out.writeUTF("SIGNUP");
                         out.writeUTF(username);
                         out.writeUTF(pass);
                         out.writeUTF(name);
                         out.writeUTF(surname);
-                        out.writeUTF(dni);
-                        out.writeUTF(birthdayFormatted);
-                        out.writeUTF(email);
+                        out.writeUTF(birthdayInput); // **FORMATO: dd-MM-yyyy**
                         out.writeUTF(sex);
+                        out.writeUTF(email);
                         out.writeUTF(phone);
+                        out.writeUTF(dni);
                         out.writeUTF(insurance);
                         out.writeUTF(emergency);
                         out.flush();
 
+                        // **RESPUESTA ESPERADA: "ACK" o "ERROR"**
                         String resp = in.readUTF();
-                        if ("REGISTER_OK".equalsIgnoreCase(resp) || "OK".equalsIgnoreCase(resp) || "ACK".equalsIgnoreCase(resp)) {
+                        if ("ACK".equals(resp)) {
                             ok = true;
-                            if (!"ACK".equalsIgnoreCase(resp)) {
-                                msg = "Account created";
-                            } else {
-                                // El servidor puede enviar mensaje adicional tras ACK
-                                try {
-                                    msg = in.readUTF();
-                                } catch (IOException ignored) {
-                                    msg = "Account created";
-                                }
-                            }
+                            msg = in.readUTF(); // Leer mensaje adicional
+                        } else if ("ERROR".equals(resp)) {
+                            msg = in.readUTF();
+                            ok = false;
                         } else {
-                            msg = resp;
-                            try {
-                                String extra = in.readUTF();
-                                if (extra != null && !extra.isBlank()) msg += " - " + extra;
-                            } catch (IOException ignored) {}
+                            msg = "Unexpected response: " + resp;
+                            ok = false;
                         }
                     } catch (IOException ex) {
                         msg = "I/O error: " + ex.getMessage();
@@ -539,9 +516,11 @@ public class MenuPatientSwing extends JFrame {
                 @Override
                 protected void done() {
                     regCreate.setEnabled(true);
-                    JOptionPane.showMessageDialog(MenuPatientSwing.this, msg == null ? (ok ? "Created" : "Failed") : msg);
                     if (ok) {
+                        JOptionPane.showMessageDialog(MenuPatientSwing.this, msg != null ? msg : "Account created successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
                         cardLayout.show(cards, "login");
+                    } else {
+                        JOptionPane.showMessageDialog(MenuPatientSwing.this, "Registration failed: " + (msg != null ? msg : "Unknown error"), "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 }
             }.execute();
@@ -739,7 +718,7 @@ public class MenuPatientSwing extends JFrame {
         cards.add(symptomsSelectorPanel, "symptomsSelector");
         add(cards, BorderLayout.CENTER);
 
-        btnRecordBitalino.addActionListener(e -> cardLayout.show(cards, "bitalino"));
+        btnRecordBitalino.addActionListener(e -> cardLayout.show(cards, "bitalinoRecording"));
 
         cardLayout.show(cards, "home");
     }
@@ -884,12 +863,15 @@ public class MenuPatientSwing extends JFrame {
                     btnConnect.setEnabled(true);
                     status.setText(msg);
                     if (ok) {
+                        // Guardar datos y notificar al usuario
                         lastHost = host;
                         lastPort = port;
                         connectedFlag = true;
                         macAddress = mac.isBlank() ? null : mac;
                         btnLogin.setEnabled(true);
                         btnRegister.setEnabled(true);
+                        // Mensaje claro al usuario
+                        JOptionPane.showMessageDialog(dlg, "¡Conectado!", "Info", JOptionPane.INFORMATION_MESSAGE);
                         dlg.dispose();
                     } else {
                         JOptionPane.showMessageDialog(dlg, msg, "Error", JOptionPane.ERROR_MESSAGE);
@@ -1000,6 +982,11 @@ public class MenuPatientSwing extends JFrame {
         if (email == null) return false;
         String emailRegex = "^[A-Za-z0-9+_.\\-]+@[A-Za-z0-9.\\-]+$";
         return Pattern.matches(emailRegex, email);
+    }
+
+    private static boolean isValidPhone(String phone) {
+        if (phone == null) return false;
+        return phone.matches("\\d{7,15}");
     }
 
     private static boolean isValidPhoneForDb(String phone) {
