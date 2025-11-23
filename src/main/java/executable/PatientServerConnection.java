@@ -401,7 +401,7 @@ public class PatientServerConnection {
             System.out.println(" password=(hidden)");
             System.out.println(" name=" + name);
             System.out.println(" surname=" + surname);
-            System.out.println(" birthday=" + birthdayFormatted + " (yyyy-MM-dd)");
+            System.out.println(" birthday=" + birthdayFormatted + " (dd-MM-yyyy)");
             System.out.println(" sex=" + sexVal);
             System.out.println(" email=" + email);
             System.out.println(" phone=" + phone);

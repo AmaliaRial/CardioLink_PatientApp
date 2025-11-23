@@ -1,3 +1,4 @@
+// src/main/java/executable/MenuPatientSwing.java
 package executable;
 
 import bitalino.SignalFilePlotter;
@@ -248,7 +249,8 @@ public class MenuPatientSwing extends JFrame {
                             boolean ok = false;
                             try { ok = in.readBoolean(); } catch (EOFException ignored) {}
                             String msg = "";
-                            try { msg = in.readUTF(); } catch (EOFException ignored) {}
+                            try { msg = in.readUTF();
+                            } catch (EOFException ignored) {}
                             serverMsg = msg;
                             if (ok) {
                                 success = true;
@@ -412,7 +414,7 @@ public class MenuPatientSwing extends JFrame {
             fSurname.setText("");
             fPassword.setText("");
             fDni.setText("");
-            fBirthday.setText("yyyy-MM-dd");
+            fBirthday.setText("dd-mm-yyyy");
             fEmail.setText("");
             fSex.setText("");
             fPhone.setText("");
@@ -527,6 +529,7 @@ public class MenuPatientSwing extends JFrame {
         });
 
         // Bitalino and recording panels
+
         JPanel bitalinoPanel = new JPanel(new GridBagLayout());
         bitalinoPanel.setBackground(new Color(171, 191, 234));
         GridBagConstraints b = new GridBagConstraints();
@@ -543,6 +546,35 @@ public class MenuPatientSwing extends JFrame {
         btnRecordBitalino.setPreferredSize(new Dimension(420, 80));
         b.gridx = 0; b.gridy = 0; b.weightx = 1.0; b.weighty = 1.0; b.anchor = GridBagConstraints.CENTER;
         bitalinoPanel.add(btnRecordBitalino, b);
+
+        // Botón añadido: "View Diagnosis File" a la derecha con mismas propiedades visuales
+        JButton btnViewDiagnosisFile = new JButton("View Diagnosis File");
+        btnViewDiagnosisFile.setFont(btnRecordBitalino.getFont().deriveFont(Font.BOLD, 24f));
+        btnViewDiagnosisFile.setBackground(new Color(182, 118, 45));
+        btnViewDiagnosisFile.setForeground(Color.WHITE);
+        btnViewDiagnosisFile.setOpaque(true);
+        btnViewDiagnosisFile.setBorderPainted(false);
+        btnViewDiagnosisFile.setFocusPainted(false);
+        btnViewDiagnosisFile.setPreferredSize(new Dimension(420, 80));
+        b.gridx = 1; b.gridy = 0; b.weightx = 1.0; b.weighty = 1.0; b.anchor = GridBagConstraints.CENTER;
+        bitalinoPanel.add(btnViewDiagnosisFile, b);
+
+        // Acción: intenta abrir el archivo de grabación actual o muestra mensaje
+        btnViewDiagnosisFile.addActionListener(e -> {
+            if (currentRecordingFile == null || !currentRecordingFile.exists()) {
+                JOptionPane.showMessageDialog(this, "Recording file not available", "Info", JOptionPane.INFORMATION_MESSAGE);
+                return;
+            }
+            try {
+                if (Desktop.isDesktopSupported()) {
+                    Desktop.getDesktop().open(currentRecordingFile);
+                } else {
+                    new SignalFilePlotter(currentRecordingFile.getAbsolutePath());
+                }
+            } catch (IOException ex) {
+                JOptionPane.showMessageDialog(this, "Cannot open file: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+            }
+        });
 
         JButton btnBitalinoReturn = new JButton("Return");
         btnBitalinoReturn.setFocusPainted(false);
