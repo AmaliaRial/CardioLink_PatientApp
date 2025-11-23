@@ -4,14 +4,12 @@ package bitalino;
 
 import pojos.Patient;
 
-import java.io.BufferedWriter;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
-
+import executable.PatientServerConnection;
 
 public class BitalinoManager {
 
@@ -64,8 +62,8 @@ public class BitalinoManager {
      * @param patient The patient for whom to record data.
      * @throws BITalinoException if the device is not idle or other errors occur.
      */
-    /*
-    public void startRecording(Patient patient) throws BITalinoException {
+
+    /*public void startRecording(Patient patient, DataOutputStream out) throws BITalinoException {
         if (isRecording) {
             throw new BITalinoException(BITalinoErrorTypes.DEVICE_NOT_IDLE);
         }
@@ -123,7 +121,7 @@ public class BitalinoManager {
                     String dataString = "[" + ecgBuilder.toString() + ";" + edaBuilder.toString() + "]";
 
                     try {
-                        sendFragmentsOfRecording(dataString);
+                        PatientServerConnection.sendFragmentsOfRecording(dataString, out);
                     } catch (Exception e) {
                         e.printStackTrace();
                     }
@@ -135,7 +133,7 @@ public class BitalinoManager {
 
         });
             recordingThread.start();
-    } */
+    }*/
 
     /**
      * Stops the ongoing recording safely.

@@ -11,6 +11,7 @@ import pojos.enums.Sex;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
+import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.Socket;
@@ -515,7 +516,7 @@ public class PatientServerConnection {
     }
 
     // SEND FRAGMENT OF RECORDING
-    public void sendFragmentsOfRecording(String dataString, DataOutputStream out, Socket socket) {
+    public static void sendFragmentsOfRecording(String dataString, DataOutputStream out) {
         try {
             // 1. Mandar comando
             out.writeUTF("SEND_FRAGMENTS_OF_RECORDING");
@@ -524,8 +525,6 @@ public class PatientServerConnection {
             out.writeUTF(dataString);
 
             out.flush(); // aseguramos envío
-
-            // No esperamos confirmación del servidor
 
         } catch (IOException e) {
             e.printStackTrace();
