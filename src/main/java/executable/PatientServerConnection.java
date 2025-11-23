@@ -259,7 +259,7 @@ public class PatientServerConnection {
                 }
 
                 // After recording stopped: select symptoms for THIS DiagnosisFile
-                sendSymptomsInteractive(scanner, outputStream, inputStream, diagnosisFileId);
+                sendSymptoms(scanner, outputStream, inputStream);
 
                 System.out.println("Do you want to record again? (yes/no)");
                 String again = scanner.nextLine().trim().toLowerCase();
@@ -489,7 +489,7 @@ public class PatientServerConnection {
         }
     }
 
-    // --- Recorging lifecycle
+    // Recorging lifecycle
     //"START"
     private static boolean startRecording(DataOutputStream out){
         if( out == null) return false;
@@ -503,17 +503,17 @@ public class PatientServerConnection {
             return false;
         }
     }
-    private static String readyToRecord (DataInputStream in){
-        if( in == null) return null;
+    private static boolean readyToRecord(DataInputStream in) {
+        if (in == null) return false;
         try {
             String response = in.readUTF();
-            return response;
-
+            return "READY_TO_RECORD".equals(response);
         } catch (IOException e) {
-            System.err.println("I/O error during READY TO RECORD: " + e.getMessage());
-            return null;
+            System.err.println("I/O error during READY_TO_RECORD: " + e.getMessage());
+            return false;
         }
     }
+
 
     // SEND FRAGMENT OF RECORDING
     public static void sendFragmentsOfRecording(String dataString, DataOutputStream out) {
@@ -544,45 +544,64 @@ public class PatientServerConnection {
             return false;
         }
     }
-
-
-    private static void sendSymptomsInteractive(Scanner scanner,
-                                                DataOutputStream out,
-                                                DataInputStream in,
-                                                int diagnosisFileId) {
+    private static boolean RecordingStop(DataInputStream in) {
+        if (in == null) return false;
         try {
-            System.out.println("\nSelect symptoms from the list (IDs). Example input: 1,3,5");
-            System.out.println("1 - Pain\n2 - Difficulty holding objects\n3 - Trouble breathing\n4 - Trouble swallowing\n5 - Trouble sleeping\n6 - Fatigue");
-            System.out.print("Enter symptom IDs separated by commas (or leave blank for none): ");
+            String response = in.readUTF();
+            return "RECORDING_STOP".equals(response);
+        } catch (IOException e) {
+            System.err.println("I/O error during RECORDING_STOP: " + e.getMessage());
+            return false;
+        }
+    }
+    private static boolean SelectSymptoms (DataInputStream in) {
+        if (in == null) return false;
+        try {
+            String response = in.readUTF();
+            return "SELECT_SYMPTOMS".equals(response);
+        } catch (IOException e) {
+            System.err.println("I/O error during SELECT_SYMPTOMS: " + e.getMessage());
+            return false;
+        }
+    }
+
+
+    private static void sendSymptoms(Scanner scanner,
+                                     DataOutputStream out,
+                                     DataInputStream in) {
+        try {
+            System.out.println("Pain,Difficulty holding objects,trouble breathing,Trouble swallowing,Trouble sleeping,Fatigue");
             String line = scanner.nextLine().trim();
-            String[] tokens = line.isEmpty() ? new String[0] : line.split(",");
+            if (line == null) line = "";
 
             out.writeUTF("SYMPTOMS");
-            out.writeInt(diagnosisFileId);  // asociamos síntomas a este DiagnosisFile
-            out.writeInt(tokens.length);
-            for (String t : tokens) {
-                try {
-                    int id = Integer.parseInt(t.trim());
-                    out.writeInt(id);
-                } catch (NumberFormatException nfe) {
-                    out.writeInt(-1);
-                }
-            }
-            out.writeUTF(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            out.writeUTF(line); // enviamos la lista de síntomas como una única cadena CSV
             out.flush();
 
-            String response = in.readUTF();
-            if ("ACK".equals(response)) {
-                String msg = in.readUTF();
-                System.out.println("Server: " + msg);
-            } else {
-                System.err.println("Server response: " + response);
-            }
         } catch (IOException e) {
             System.err.println("I/O error sending symptoms: " + e.getMessage());
         }
     }
 
+
+    private static boolean isSymptomsReceived(DataInputStream in, Socket socket, int timeoutMs) {
+        if (in == null || socket == null) return false;
+        int previousTimeout = 0;
+        try {
+            previousTimeout = socket.getSoTimeout();
+            socket.setSoTimeout(timeoutMs);
+            String response = in.readUTF();
+            return "SYMPTOMS_RECEIVED".equals(response);
+        } catch (SocketTimeoutException ste) {
+            // No message arrived within timeout -> no symptoms received yet
+            return false;
+        } catch (IOException e) {
+            System.err.println("I/O error during SYMPTOMS_RECEIVED: " + e.getMessage());
+            return false;
+        } finally {
+            try { socket.setSoTimeout(previousTimeout); } catch (SocketException ignored) {}
+        }
+    }
 
 
 
