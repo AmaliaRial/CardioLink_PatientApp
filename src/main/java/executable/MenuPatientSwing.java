@@ -1,7 +1,4 @@
-// src/main/java/executable/MenuPatientSwing.java
 package executable;
-
-import bitalino.SignalFilePlotter;
 
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicButtonUI;
@@ -10,24 +7,15 @@ import java.awt.event.WindowAdapter;
 import java.awt.event.WindowEvent;
 import java.io.*;
 import java.net.Socket;
-import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.List;
 import java.util.*;
-import java.util.function.Consumer;
+import java.util.List;
 import java.util.regex.Pattern;
 
-/**
- * Ventana principal del paciente.
- * - UI con flujo de Login/Register/Recording.
- * - Login robusto: usa ensureConnectedRetry, timeout para lectura y manejo de respuestas tolerante.
- * - Start Recording: solicita al servidor abrir DiagnosisFile, recibe id, envía START, simula envío DATA_BLOCK y guarda CSV local para plot.
- * - Stop Recording: envía END y muestra panel de diagnosis.
- */
+
 public class MenuPatientSwing extends JFrame {
 
     private final CardLayout cardLayout = new CardLayout();
@@ -39,7 +27,7 @@ public class MenuPatientSwing extends JFrame {
 
     private JButton btnLogin;
     private JButton btnRegister;
-    private JButton btnRecordBitalino; // campo para permitir habilitar desde login
+    private JButton btnRecordBitalino; // UI preserved pero sin lógica de grabación
 
     private String macAddress = null;
 
@@ -51,11 +39,9 @@ public class MenuPatientSwing extends JFrame {
     // Usuario logueado
     private String currentUsername = null;
 
-    // Diagnosis actual durante la grabación
-    private int currentDiagnosisId = -1;
-    private File currentRecordingFile = null;
+    // Estado de grabación
     private volatile boolean recording = false;
-    private SwingWorker<Void, Void> recordingWorker = null;
+    private volatile boolean stopRequested = false;
 
     public MenuPatientSwing() {
         super("App for Patients");
@@ -212,7 +198,6 @@ public class MenuPatientSwing extends JFrame {
         btnLoginContinue.setUI(new BasicButtonUI());
 
         // LOGIN handler
-
         btnLoginContinue.addActionListener(e -> {
             String username = loginUsername.getText().trim();
             String pass = String.valueOf(loginPass.getPassword()).trim();
@@ -246,20 +231,13 @@ public class MenuPatientSwing extends JFrame {
                         String statusResp = in.readUTF();
 
                         if ("LOGIN_RESULT".equals(statusResp)) {
-                            boolean ok = false;
-                            try { ok = in.readBoolean(); } catch (EOFException ignored) {}
-                            String msg = "";
-                            try { msg = in.readUTF();
-                            } catch (EOFException ignored) {}
-                            serverMsg = msg;
-                            if (ok) {
-                                success = true;
-                                currentUsername = username; // fijar usuario logueado
-                            } else {
-                                success = false;
-                            }
+                            // lectura simplificada para mantener compilación
+                            boolean ok = in.readBoolean();
+                            serverMsg = in.readUTF();
+                            success = ok;
+                            if (success) currentUsername = username;
                         } else {
-                            serverMsg = "Unexpected response: " + statusResp;
+                            serverMsg = "Respuesta inesperada del servidor";
                         }
 
                     } catch (SocketTimeoutException ste) {
@@ -276,25 +254,21 @@ public class MenuPatientSwing extends JFrame {
                     return null;
                 }
 
-
                 @Override
                 protected void done() {
                     btnLoginContinue.setEnabled(true);
                     if (success) {
-                        btnRecordBitalino.setEnabled(true);
+                        if (btnRecordBitalino != null) btnRecordBitalino.setEnabled(true);
                         btnLogin.setEnabled(true);
                         btnRegister.setEnabled(false);
                         JOptionPane.showMessageDialog(MenuPatientSwing.this, serverMsg == null ? "Login successful" : serverMsg, "Success", JOptionPane.INFORMATION_MESSAGE);
-                        // Navegar a la pantalla con el botón "Record Bitalino Signal"
                         cardLayout.show(cards, "bitalino");
                     } else {
                         JOptionPane.showMessageDialog(MenuPatientSwing.this, "Login failed: " + (serverMsg == null ? "unknown" : serverMsg), "Error", JOptionPane.ERROR_MESSAGE);
                     }
                 }
-
             }.execute();
         });
-
 
         g.gridx = 2; g.gridy = 2; g.weightx = 0; g.fill = GridBagConstraints.NONE;
         login.add(btnLoginContinue, g);
@@ -325,7 +299,6 @@ public class MenuPatientSwing extends JFrame {
         regTitle.setFont(regTitle.getFont().deriveFont(Font.BOLD, 22f));
         r.gridx = 0; r.gridy = 0; r.gridwidth = 6; r.anchor = GridBagConstraints.CENTER;
         register.add(regTitle, r);
-
 
         JTextField fUsername   = underlineField(18);
         JPasswordField fPassword = (JPasswordField) underlineField(new JPasswordField(18));
@@ -422,7 +395,7 @@ public class MenuPatientSwing extends JFrame {
             fEmergency.setText("");
         });
 
-        // SIGN UP
+        // SIGN UP (simplificado para compilar)
         regCreate.addActionListener(e -> {
             String username = fUsername.getText().trim();
             String name = fName.getText().trim();
@@ -436,7 +409,6 @@ public class MenuPatientSwing extends JFrame {
             String insurance = fInsurance.getText().trim();
             String emergency = fEmergency.getText().trim();
 
-            // Validaciones
             if (username.isBlank() || name.isBlank() || surname.isBlank() || dni.isBlank() || pass.isBlank() ||
                     birthdayInput.isBlank() || email.isBlank() || sex.isBlank() || phone.isBlank() ||
                     insurance.isBlank() || emergency.isBlank()) {
@@ -480,14 +452,12 @@ public class MenuPatientSwing extends JFrame {
                 protected Void doInBackground() {
                     try {
                         ensureConnectedRetry(server[0], Integer.parseInt(server[1]));
-
-                        // **PROTOCOLO EXACTO: "SIGNUP" + campos en ORDEN ESPECÍFICO**
                         out.writeUTF("SIGNUP");
                         out.writeUTF(username);
                         out.writeUTF(pass);
                         out.writeUTF(name);
                         out.writeUTF(surname);
-                        out.writeUTF(birthdayInput); // **FORMATO: dd-MM-yyyy**
+                        out.writeUTF(birthdayInput);
                         out.writeUTF(sex);
                         out.writeUTF(email);
                         out.writeUTF(phone);
@@ -496,17 +466,12 @@ public class MenuPatientSwing extends JFrame {
                         out.writeUTF(emergency);
                         out.flush();
 
-                        // **RESPUESTA ESPERADA: "ACK" o "ERROR"**
                         String resp = in.readUTF();
                         if ("ACK".equals(resp)) {
                             ok = true;
-                            msg = in.readUTF(); // Leer mensaje adicional
-                        } else if ("ERROR".equals(resp)) {
-                            msg = in.readUTF();
-                            ok = false;
+                            msg = "Account created";
                         } else {
-                            msg = "Unexpected response: " + resp;
-                            ok = false;
+                            msg = "Server error: " + resp;
                         }
                     } catch (IOException ex) {
                         msg = "I/O error: " + ex.getMessage();
@@ -528,7 +493,7 @@ public class MenuPatientSwing extends JFrame {
             }.execute();
         });
 
-        // Bitalino and recording panels
+        // Bitalino and recording panels (UI preserved, logic implemented here)
 
         JPanel bitalinoPanel = new JPanel(new GridBagLayout());
         bitalinoPanel.setBackground(new Color(171, 191, 234));
@@ -559,21 +524,9 @@ public class MenuPatientSwing extends JFrame {
         b.gridx = 1; b.gridy = 0; b.weightx = 1.0; b.weighty = 1.0; b.anchor = GridBagConstraints.CENTER;
         bitalinoPanel.add(btnViewDiagnosisFile, b);
 
-        // Acción: intenta abrir el archivo de grabación actual o muestra mensaje
+        // Acción: ahora solo informa que la funcionalidad fue eliminada
         btnViewDiagnosisFile.addActionListener(e -> {
-            if (currentRecordingFile == null || !currentRecordingFile.exists()) {
-                JOptionPane.showMessageDialog(this, "Recording file not available", "Info", JOptionPane.INFORMATION_MESSAGE);
-                return;
-            }
-            try {
-                if (Desktop.isDesktopSupported()) {
-                    Desktop.getDesktop().open(currentRecordingFile);
-                } else {
-                    new SignalFilePlotter(currentRecordingFile.getAbsolutePath());
-                }
-            } catch (IOException ex) {
-                JOptionPane.showMessageDialog(this, "Cannot open file: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-            }
+            JOptionPane.showMessageDialog(this, "La visualización del fichero de diagnóstico ha sido eliminada.", "Info", JOptionPane.INFORMATION_MESSAGE);
         });
 
         JButton btnBitalinoReturn = new JButton("Return");
@@ -618,97 +571,110 @@ public class MenuPatientSwing extends JFrame {
         JButton btnReturnRec = new JButton("Return");
         btnReturnRec.addActionListener(e -> cardLayout.show(cards, "bitalino"));
 
-        // START action
+        // New recording logic: Start button
         btnStart.addActionListener(e -> {
-            if (currentUsername == null) {
-                JOptionPane.showMessageDialog(this, "Login as patient first", "Info", JOptionPane.INFORMATION_MESSAGE);
+            if (!connectedFlag || out == null || in == null) {
+                JOptionPane.showMessageDialog(this, "No conectado al servidor", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
-            String[] server = askServerHostPortIfNotConnected();
-            if (server == null) return;
-
             btnStart.setEnabled(false);
+            btnStop.setEnabled(true);
+            stopRequested = false;
 
-            new SwingWorker<Boolean, Void>() {
-                private String msg = null;
-                private boolean ok = false;
+            new SwingWorker<Void, Void>() {
                 @Override
-                protected Boolean doInBackground() {
+                protected Void doInBackground() {
                     try {
-                        ensureConnectedRetry(server[0], Integer.parseInt(server[1]));
-                        // request open new diagnosis
-                        out.writeUTF("OPEN_NEW_DIAGNOSIS_FILE");
-                        out.writeUTF(currentUsername == null ? "" : currentUsername);
-                        out.writeUTF(LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME));
-                        out.flush();
-
-                        String resp = in.readUTF();
-                        if ("DIAGNOSIS_OPENED".equals(resp)) {
-                            int id = in.readInt();
-                            currentDiagnosisId = id;
-                            // send START <id>
-                            out.writeUTF("START");
-                            out.writeInt(currentDiagnosisId);
-                            out.flush();
-
-                            // Prepare CSV file local
-                            currentRecordingFile = File.createTempFile("recording_diag_" + currentDiagnosisId + "_", ".csv");
-                            try (PrintWriter pw = new PrintWriter(new FileWriter(currentRecordingFile))) {
-                                pw.println("ECG,EDA");
-                            }
-
-                            // start simulated recording
-                            recording = true;
-                            startSimulatedRecordingWorker();
-                            ok = true;
-                            msg = "Recording started. Diagnosis id: " + id;
-                        } else {
-                            if ("ERROR".equals(resp)) {
-                                String em = in.readUTF();
-                                msg = "Server error: " + em;
-                            } else {
-                                msg = "Unexpected server response: " + resp;
-                            }
-                            ok = false;
+                        // 1) START
+                        if (!startRecording(out)) {
+                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(MenuPatientSwing.this, "Error enviando START", "Error", JOptionPane.ERROR_MESSAGE));
+                            return null;
                         }
-                    } catch (IOException ex) {
-                        msg = "I/O error: " + ex.getMessage();
-                        cleanupResources();
+                        // 2) READY_TO_RECORD
+                        if (!readyToRecord(in)) {
+                            SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(MenuPatientSwing.this, "Servidor no listo para grabar", "Error", JOptionPane.ERROR_MESSAGE));
+                            return null;
+                        }
+                        recording = true;
+
+                        // 3) Enviar fragmentos periódicamente hasta que se pida stop
+                        int fragIdx = 0;
+                        while (!stopRequested) {
+                            String fragment = "fragment_data_" + fragIdx++; // sustituir por datos reales si procede
+                            sendFragmentsOfRecording(fragment, out);
+                            try { Thread.sleep(400); } catch (InterruptedException ignored) {}
+                        }
+                    } finally {
+                        recording = false;
                     }
-                    return ok;
+                    return null;
                 }
 
                 @Override
                 protected void done() {
                     btnStart.setEnabled(true);
-                    try { boolean res = get(); if (res) { btnStop.setEnabled(true); btnContinueRec.setEnabled(false); cardLayout.show(cards, "bitalinoRecording"); } } catch (Exception ignored) {}
-                    JOptionPane.showMessageDialog(MenuPatientSwing.this, msg == null ? "Done" : msg);
+                    btnStop.setEnabled(false);
                 }
             }.execute();
         });
 
+        // Stop button logic
         btnStop.addActionListener(e -> {
-            if (!recording) return;
-            recording = false;
+            if (!connectedFlag || out == null || in == null) {
+                JOptionPane.showMessageDialog(this, "No conectado al servidor", "Error", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
+            stopRequested = true;
             btnStop.setEnabled(false);
-            btnContinueRec.setEnabled(true);
-            if (recordingWorker != null) recordingWorker.cancel(true);
-            // send END
+
             new SwingWorker<Void, Void>() {
                 @Override
                 protected Void doInBackground() {
-                    try {
-                        if (out != null) {
-                            out.writeUTF("END");
-                            out.flush();
-                        }
-                    } catch (IOException ignored) {}
+                    // 1) STOP
+                    if (!stopRecording(out)) {
+                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(MenuPatientSwing.this, "Error enviando STOP", "Error", JOptionPane.ERROR_MESSAGE));
+                        return null;
+                    }
+                    // 2) RECORDING_STOP
+                    if (!RecordingStop(in)) {
+                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(MenuPatientSwing.this, "No se confirmó STOP por el servidor", "Error", JOptionPane.ERROR_MESSAGE));
+                        return null;
+                    }
+
+                    // 3) Esperar/leer comando SELECT_SYMPTOMS del servidor
+                    if (!SelectSymptoms(in)) {
+                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(MenuPatientSwing.this, "Servidor no solicitó selección de síntomas", "Info", JOptionPane.INFORMATION_MESSAGE));
+                        return null;
+                    }
+
+                    // 4) Mostrar diálogo de selección de síntomas en EDT y obtener CSV
+                    String csv = getSymptomsFromUser();
+                    if (csv == null) {
+                        // usuario canceló
+                        return null;
+                    }
+
+                    // 5) Enviar síntomas usando el helper existente
+                    try (Scanner sc = new Scanner(csv)) {
+                        sendSymptoms(sc, out, in);
+                    }
+
+                    // 6) Comprobar recepción
+                    if (isSymptomsReceived(in)) {
+                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(MenuPatientSwing.this, "Síntomas enviados y confirmados por el servidor", "Info", JOptionPane.INFORMATION_MESSAGE));
+                    } else {
+                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(MenuPatientSwing.this, "Servidor no confirmó la recepción de síntomas", "Error", JOptionPane.ERROR_MESSAGE));
+                    }
+
                     return null;
                 }
+
                 @Override
                 protected void done() {
-                    // show diagnosis panel
-                    SwingUtilities.invokeLater(() -> showDiagnosisPanel(currentDiagnosisId, currentRecordingFile));
+                    // volver a vista o actualizar estado
+                    cardLayout.show(cards, "symptomsSelector");
+                    btnStart.setEnabled(true);
+                    btnStop.setEnabled(false);
                 }
             }.execute();
         });
@@ -725,21 +691,22 @@ public class MenuPatientSwing extends JFrame {
         br.gridx = 0; br.gridy = 2; br.gridwidth = 2;
         bitalinoRecordingPanel.add(btnReturnRec, br);
 
-        // Symptoms selector
-        JPanel symptomsSelectorPanel = createSymptomsSelectorPanel(list -> {
-            if (currentDiagnosisId <= 0) {
-                JOptionPane.showMessageDialog(this, "No diagnosis id available", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            // list contains strings like "1 - Pain" => extract ids
-            List<String> ids = new ArrayList<>();
-            for (String s : list) {
-                String[] parts = s.split(" - ");
-                ids.add(parts[0].trim());
-            }
-            String csv = String.join(",", ids);
-            sendSymptomsToServer(currentDiagnosisId, csv);
-        });
+        // Placeholder para selector de síntomas (UI preservada)
+        JPanel symptomsSelectorPlaceholder = new JPanel(new BorderLayout());
+        symptomsSelectorPlaceholder.setBackground(new Color(171, 191, 234));
+        symptomsSelectorPlaceholder.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+        JLabel symTitle = new JLabel("Select symptoms (functionality present)", SwingConstants.CENTER);
+        symTitle.setFont(symTitle.getFont().deriveFont(Font.BOLD, 18f));
+        symptomsSelectorPlaceholder.add(symTitle, BorderLayout.NORTH);
+        JTextArea info = new JTextArea("Seleccione síntomas tras finalizar la grabación. El cliente enviará la selección al servidor.");
+        info.setEditable(false);
+        info.setBackground(new Color(171, 191, 234));
+        symptomsSelectorPlaceholder.add(new JScrollPane(info), BorderLayout.CENTER);
+        JPanel symBtns = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JButton symBack = new JButton("Back");
+        symBack.addActionListener(e -> cardLayout.show(cards, "bitalino"));
+        symBtns.add(symBack);
+        symptomsSelectorPlaceholder.add(symBtns, BorderLayout.SOUTH);
 
         cards.add(home, "home");
         cards.add(auth, "auth");
@@ -747,7 +714,7 @@ public class MenuPatientSwing extends JFrame {
         cards.add(new JScrollPane(register), "register");
         cards.add(bitalinoPanel, "bitalino");
         cards.add(bitalinoRecordingPanel, "bitalinoRecording");
-        cards.add(symptomsSelectorPanel, "symptomsSelector");
+        cards.add(symptomsSelectorPlaceholder, "symptomsSelector");
         add(cards, BorderLayout.CENTER);
 
         btnRecordBitalino.addActionListener(e -> cardLayout.show(cards, "bitalinoRecording"));
@@ -755,68 +722,12 @@ public class MenuPatientSwing extends JFrame {
         cardLayout.show(cards, "home");
     }
 
-    private void startSimulatedRecordingWorker() {
-        recordingWorker = new SwingWorker<>() {
-            @Override
-            protected Void doInBackground() {
-                Random rnd = new Random();
-                int blockSize = 10;
-                try {
-                    while (recording && !isCancelled()) {
-                        int frames = blockSize;
-                        try {
-                            out.writeUTF("DATA_BLOCK");
-                            out.writeInt(frames);
-                            for (int i = 0; i < frames; i++) {
-                                long ts = System.currentTimeMillis();
-                                int[] analog = new int[]{500 + rnd.nextInt(200) - 100, 200 + rnd.nextInt(100) - 50};
-                                out.writeLong(ts);
-                                out.writeInt(analog.length);
-                                for (int v : analog) out.writeInt(v);
-                                // append CSV
-                                try (PrintWriter pw = new PrintWriter(new FileWriter(currentRecordingFile, true))) {
-                                    pw.println(analog[0] + "," + analog[1]);
-                                } catch (IOException ioe) {
-                                    System.err.println("CSV append failed: " + ioe.getMessage());
-                                }
-                            }
-                            out.flush();
-                        } catch (IOException e) {
-                            System.err.println("I/O sending data block: " + e.getMessage());
-                            try {
-                                if (lastHost != null && lastPort > 0) {
-                                    ensureConnectedRetry(lastHost, lastPort);
-                                }
-                            } catch (IOException ex) {
-                                System.err.println("Reconnect failed: " + ex.getMessage());
-                                recording = false;
-                                break;
-                            }
-                        }
-                        try { Thread.sleep(200); } catch (InterruptedException ignored) { break; }
-                    }
-                } finally {
-                    try {
-                        if (out != null) {
-                            out.writeUTF("END");
-                            out.flush();
-                        }
-                    } catch (IOException ignored) {}
-                }
-                return null;
-            }
-        };
-        recordingWorker.execute();
-    }
-
     // Pedir host/port si no hay conexión; si ya conectado, NO pregunta, reutiliza
     private String[] askServerHostPortIfNotConnected() {
-        // Si ya hay conexión establecida, la reutilizamos directamente sin preguntar
         if (socket != null && socket.isConnected() && !socket.isClosed()
                 && connectedFlag && lastHost != null && lastPort > 0) {
             return new String[]{ lastHost, String.valueOf(lastPort) };
         }
-        // Si no hay conexión todavía, mostramos el diálogo una vez
         showConnectDialog();
         return connectedFlag ? new String[]{ lastHost, String.valueOf(lastPort) } : null;
     }
@@ -895,14 +806,12 @@ public class MenuPatientSwing extends JFrame {
                     btnConnect.setEnabled(true);
                     status.setText(msg);
                     if (ok) {
-                        // Guardar datos y notificar al usuario
                         lastHost = host;
                         lastPort = port;
                         connectedFlag = true;
                         macAddress = mac.isBlank() ? null : mac;
                         btnLogin.setEnabled(true);
                         btnRegister.setEnabled(true);
-                        // Mensaje claro al usuario
                         JOptionPane.showMessageDialog(dlg, "¡Conectado!", "Info", JOptionPane.INFORMATION_MESSAGE);
                         dlg.dispose();
                     } else {
@@ -963,45 +872,6 @@ public class MenuPatientSwing extends JFrame {
         connectedFlag = false;
     }
 
-    // Enviar síntomas con string "1,2,3"
-    private void sendSymptomsToServer(int diagnosisId, String csvIds) {
-        String[] server = askServerHostPortIfNotConnected();
-        if (server == null) return;
-        new SwingWorker<Void, Void>() {
-            @Override
-            protected Void doInBackground() {
-                try {
-                    ensureConnectedRetry(server[0], Integer.parseInt(server[1]));
-                    out.writeUTF("SYMPTOMS");
-                    out.writeInt(diagnosisId);
-                    String[] toks = csvIds == null || csvIds.trim().isEmpty() ? new String[0] : csvIds.split(",");
-                    out.writeInt(toks.length);
-                    for (String t : toks) {
-                        try { out.writeInt(Integer.parseInt(t.trim())); } catch (NumberFormatException ex) { out.writeInt(-1); }
-                    }
-                    out.writeUTF(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-                    out.flush();
-                    // read best-effort ACK
-                    try {
-                        socket.setSoTimeout(3000);
-                        String resp = in.readUTF();
-                        if ("ACK".equals(resp)) {
-                            String msg = in.readUTF();
-                            JOptionPane.showMessageDialog(MenuPatientSwing.this, "Server: " + msg);
-                        }
-                    } catch (SocketTimeoutException ignored) {
-                    } catch (IOException ignored) {}
-                } catch (IOException e) {
-                    JOptionPane.showMessageDialog(MenuPatientSwing.this, "Error enviando síntomas: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                } finally {
-                    try { if (socket != null) socket.setSoTimeout(0); } catch (SocketException ignored) {}
-                }
-                return null;
-            }
-        }.execute();
-    }
-
-    // Helpers: validations and UI helpers
     private static boolean isValidIPAddress(String ip) {
         if (ip == null) return false;
         if (ip.equalsIgnoreCase("localhost")) return true;
@@ -1079,89 +949,168 @@ public class MenuPatientSwing extends JFrame {
         return f;
     }
 
-    // Selector de síntomas con IDs numéricos
-    public JPanel createSymptomsSelectorPanel(Consumer<List<String>> onSave) {
-        JPanel p = new JPanel(new BorderLayout());
-        p.setBackground(new Color(171, 191, 234));
-        p.setBorder(BorderFactory.createEmptyBorder(20, 20, 20, 20));
+    // Recorging lifecycle
+//"START"
+    private static boolean startRecording(DataOutputStream out){
+        if( out == null) return false;
+        try {
+            out.writeUTF("START");
+            out.flush();
+            return true;
 
-        JLabel title = new JLabel("Select symptoms (choose IDs)", SwingConstants.CENTER);
-        title.setFont(title.getFont().deriveFont(Font.BOLD, 18f));
-        p.add(title, BorderLayout.NORTH);
 
-        String[] symptoms = {
-                "1 - Pain",
-                "2 - Difficulty holding objects",
-                "3 - Trouble breathing",
-                "4 - Trouble swallowing",
-                "5 - Trouble sleeping",
-                "6 - Fatigue"
-        };
-
-        JList<String> list = new JList<>(symptoms);
-        list.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        p.add(new JScrollPane(list), BorderLayout.CENTER);
-
-        JPanel btns = new JPanel(new FlowLayout(FlowLayout.RIGHT));
-        JButton save = new JButton("Save");
-        JButton cancel = new JButton("Cancel");
-        btns.add(cancel);
-        btns.add(save);
-        p.add(btns, BorderLayout.SOUTH);
-
-        cancel.addActionListener(e -> cardLayout.show(cards, "bitalinoRecording"));
-
-        save.addActionListener(e -> {
-            List<String> sel = list.getSelectedValuesList();
-            List<String> ids = new ArrayList<>();
-            for (String s : sel) {
-                String[] parts = s.split(" - ");
-                ids.add(parts[0].trim());
-            }
-            onSave.accept(ids);
-            cardLayout.show(cards, "bitalino");
-        });
-
-        return p;
+        } catch (IOException e) {
+            System.err.println("I/O error during START: " + e.getMessage());
+            return false;
+        }
+    }
+    private static boolean readyToRecord(DataInputStream in) {
+        if (in == null) return false;
+        try {
+            String response = in.readUTF();
+            return "READY_TO_RECORD".equals(response);
+        } catch (IOException e) {
+            System.err.println("I/O error during READY_TO_RECORD: " + e.getMessage());
+            return false;
+        }
     }
 
-    private void showDiagnosisPanel(int diagnosisId, File csvFile) {
-        JFrame diag = new JFrame("Diagnosis " + diagnosisId);
-        diag.setSize(1000, 700);
-        diag.setLocationRelativeTo(this);
 
-        JPanel main = new JPanel(new BorderLayout());
-        JPanel info = new JPanel(new GridLayout(0,1));
-        info.setBorder(BorderFactory.createTitledBorder("Diagnosis info"));
-        info.add(new JLabel("ID: " + diagnosisId));
-        info.add(new JLabel("Patient: " + (currentUsername == null ? "unknown" : currentUsername)));
-        info.add(new JLabel("Recording file: " + (csvFile == null ? "n/a" : csvFile.getAbsolutePath())));
-        main.add(info, BorderLayout.WEST);
 
-        JButton btnOpenPlot = new JButton("Open Recording Plot");
-        btnOpenPlot.addActionListener(e -> {
-            if (csvFile == null || !csvFile.exists()) {
-                JOptionPane.showMessageDialog(this, "Recording file not available", "Error", JOptionPane.ERROR_MESSAGE);
-                return;
-            }
-            new SignalFilePlotter(csvFile.getAbsolutePath());
-        });
-        main.add(btnOpenPlot, BorderLayout.CENTER);
 
-        JPanel symptoms = new JPanel(new BorderLayout());
-        symptoms.setBorder(BorderFactory.createTitledBorder("Symptoms"));
-        String[] cols = {"ID", "Description"};
-        String[][] data = {
-                {"1","Pain"},{"2","Difficulty holding objects"},{"3","Trouble breathing"},
-                {"4","Trouble swallowing"},{"5","Trouble sleeping"},{"6","Fatigue"}
-        };
-        JTable table = new JTable(data, cols);
-        symptoms.add(new JScrollPane(table), BorderLayout.CENTER);
-        main.add(symptoms, BorderLayout.EAST);
+    // SEND FRAGMENT OF RECORDING
+    public static void sendFragmentsOfRecording(String dataString, DataOutputStream out) {
+        try {
+            // 1. Mandar comando
+            out.writeUTF("SEND_FRAGMENTS_OF_RECORDING");
 
-        diag.add(main);
-        diag.setVisible(true);
+
+            // 2. Mandar datos
+            out.writeUTF(dataString);
+
+
+            out.flush(); // aseguramos envío
+
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
+
+
+
+
+    private static boolean stopRecording(DataOutputStream outputStream){
+        if( outputStream == null) return false;
+        try {
+            outputStream.writeUTF("STOP");
+            outputStream.flush();
+            return true;
+
+
+        } catch (IOException e) {
+            System.err.println("I/O error during STOP: " + e.getMessage());
+            return false;
+        }
+    }
+    private static boolean RecordingStop(DataInputStream in) {
+        if (in == null) return false;
+        try {
+            String response = in.readUTF();
+            return "RECORDING_STOP".equals(response);
+        } catch (IOException e) {
+            System.err.println("I/O error during RECORDING_STOP: " + e.getMessage());
+            return false;
+        }
+    }
+    private static boolean SelectSymptoms (DataInputStream in) {
+        if (in == null) return false;
+        try {
+            String response = in.readUTF();
+            return "SELECT_SYMPTOMS".equals(response);
+        } catch (IOException e) {
+            System.err.println("I/O error during SELECT_SYMPTOMS: " + e.getMessage());
+            return false;
+        }
+    }
+
+
+
+
+    private static void sendSymptoms(Scanner scanner,
+                                     DataOutputStream out,
+                                     DataInputStream in) {
+        try {
+            System.out.println("Pain,Difficulty holding objects,trouble breathing,Trouble swallowing,Trouble sleeping,Fatigue");
+            String line = scanner.nextLine().trim();
+            if (line == null) line = "";
+
+
+            out.writeUTF("SYMPTOMS");
+            out.writeUTF(line); // enviamos la lista de síntomas como una única cadena CSV
+            out.flush();
+
+
+        } catch (IOException e) {
+            System.err.println("I/O error sending symptoms: " + e.getMessage());
+        }
+    }
+
+
+    private static boolean isSymptomsReceived (DataInputStream in) {
+        if (in == null) return false;
+        try {
+            String response = in.readUTF();
+            return "SYMPTOMS_RECEIVED".equals(response);
+        } catch (IOException e) {
+            System.err.println("I/O error during SYMPTOMS_RECEIVED: " + e.getMessage());
+            return false;
+        }
+    }
+
+
+    private String getSymptomsFromUser() {
+        final String[] result = new String[1];
+        result[0] = null;
+        try {
+            SwingUtilities.invokeAndWait(() -> {
+                JCheckBox c1 = new JCheckBox("Pain");
+                JCheckBox c2 = new JCheckBox("Difficulty holding objects");
+                JCheckBox c3 = new JCheckBox("trouble breathing");
+                JCheckBox c4 = new JCheckBox("Trouble swallowing");
+                JCheckBox c5 = new JCheckBox("Trouble sleeping");
+                JCheckBox c6 = new JCheckBox("Fatigue");
+
+                JPanel panel = new JPanel();
+                panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+                panel.add(new JLabel("Seleccione los síntomas:"));
+                panel.add(c1);
+                panel.add(c2);
+                panel.add(c3);
+                panel.add(c4);
+                panel.add(c5);
+                panel.add(c6);
+
+                int ok = JOptionPane.showConfirmDialog(MenuPatientSwing.this, panel, "Select Symptoms", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+                if (ok == JOptionPane.OK_OPTION) {
+                    List<String> chosen = new ArrayList<>();
+                    if (c1.isSelected()) chosen.add("Pain");
+                    if (c2.isSelected()) chosen.add("Difficulty holding objects");
+                    if (c3.isSelected()) chosen.add("trouble breathing");
+                    if (c4.isSelected()) chosen.add("Trouble swallowing");
+                    if (c5.isSelected()) chosen.add("Trouble sleeping");
+                    if (c6.isSelected()) chosen.add("Fatigue");
+                    result[0] = String.join(",", chosen);
+                } else {
+                    result[0] = null;
+                }
+            });
+        } catch (Exception ex) {
+            result[0] = null;
+        }
+        return result[0];
+    }
+    // DiagnosisFile lifecycle
 
     public static void main(String[] args) {
         SwingUtilities.invokeLater(() -> new MenuPatientSwing().setVisible(true));

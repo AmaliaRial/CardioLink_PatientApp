@@ -583,26 +583,16 @@ public class PatientServerConnection {
         }
     }
 
-
-    private static boolean isSymptomsReceived(DataInputStream in, Socket socket, int timeoutMs) {
-        if (in == null || socket == null) return false;
-        int previousTimeout = 0;
+    private static boolean isSymptomsReceived (DataInputStream in) {
+        if (in == null) return false;
         try {
-            previousTimeout = socket.getSoTimeout();
-            socket.setSoTimeout(timeoutMs);
             String response = in.readUTF();
             return "SYMPTOMS_RECEIVED".equals(response);
-        } catch (SocketTimeoutException ste) {
-            // No message arrived within timeout -> no symptoms received yet
-            return false;
         } catch (IOException e) {
             System.err.println("I/O error during SYMPTOMS_RECEIVED: " + e.getMessage());
             return false;
-        } finally {
-            try { socket.setSoTimeout(previousTimeout); } catch (SocketException ignored) {}
         }
     }
-
 
 
 
