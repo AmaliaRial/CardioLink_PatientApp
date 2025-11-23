@@ -26,7 +26,7 @@ public class SignalFilePlotter extends JFrame {
      * Constructor to create the plotting window.
      * @param filePath Path to the recorded data file.
      */
-    public SignalFilePlotter(String filePath) {
+    public SignalFilePlotter(String filePath) {//Cambiar a List <Integer> EGCData, List <Integer> EDAData ?
         setTitle("BITalino Recorded Signals Viewer");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(new GridLayout(2, 1));

@@ -488,26 +488,79 @@ public class PatientServerConnection {
         }
     }
 
-    // --- DiagnosisFile lifecycle (patient side) ---
-    /**
-     * Paso 2 del flujo:
-     *  1) El paciente pide al servidor que cree un nuevo DiagnosisFile
-     *     asociado al usuario logueado.
-     *  2) El servidor lo inserta en la BBDD, obtiene la primary key
-     *     y la devuelve.
-     *
-     * Protocolo propuesto:
-     *  - Enviar:
-     *      "OPEN_NEW_DIAGNOSIS_FILE"
-     *      <UTF username>
-     *      <UTF createdAt (ISO_LOCAL_DATE_TIME)>
-     *  - Recibir OK:
-     *      "DIAGNOSIS_OPENED"
-     *      <int diagnosisFileId>
-     *  - Recibir error:
-     *      "ERROR"
-     *      <UTF mensaje>
-     */
+    // --- Recorging lifecycle
+    //"START"
+    private static boolean startRecording(DataOutputStream out){
+        if( out == null) return false;
+        try {
+            out.writeUTF("START");
+            out.flush();
+            return true;
+
+        } catch (IOException e) {
+            System.err.println("I/O error during START: " + e.getMessage());
+            return false;
+        }
+
+    }
+
+    // SEND FRAGMENT OF RECORDING
+    private static boolean stopRecording(DataOutputStream outputStream){
+        if( outputStream == null) return false;
+        try {
+            outputStream.writeUTF("STOP");
+            outputStream.flush();
+            return true;
+
+        } catch (IOException e) {
+            System.err.println("I/O error during STOP: " + e.getMessage());
+            return false;
+        }
+    }
+
+
+    private static void sendSymptomsInteractive(Scanner scanner,
+                                                DataOutputStream out,
+                                                DataInputStream in,
+                                                int diagnosisFileId) {
+        try {
+            System.out.println("\nSelect symptoms from the list (IDs). Example input: 1,3,5");
+            System.out.println("1 - Pain\n2 - Difficulty holding objects\n3 - Trouble breathing\n4 - Trouble swallowing\n5 - Trouble sleeping\n6 - Fatigue");
+            System.out.print("Enter symptom IDs separated by commas (or leave blank for none): ");
+            String line = scanner.nextLine().trim();
+            String[] tokens = line.isEmpty() ? new String[0] : line.split(",");
+
+            out.writeUTF("SYMPTOMS");
+            out.writeInt(diagnosisFileId);  // asociamos síntomas a este DiagnosisFile
+            out.writeInt(tokens.length);
+            for (String t : tokens) {
+                try {
+                    int id = Integer.parseInt(t.trim());
+                    out.writeInt(id);
+                } catch (NumberFormatException nfe) {
+                    out.writeInt(-1);
+                }
+            }
+            out.writeUTF(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
+            out.flush();
+
+            String response = in.readUTF();
+            if ("ACK".equals(response)) {
+                String msg = in.readUTF();
+                System.out.println("Server: " + msg);
+            } else {
+                System.err.println("Server response: " + response);
+            }
+        } catch (IOException e) {
+            System.err.println("I/O error sending symptoms: " + e.getMessage());
+        }
+    }
+
+
+
+
+
+    // --- DiagnosisFile lifecycle
     private static int openNewDiagnosisFileOnServer(DataOutputStream out,
                                                     DataInputStream in,
                                                     String username) {
@@ -540,32 +593,7 @@ public class PatientServerConnection {
     }
 
     // Patient-Server interaction methods !
-    // 1)
-    private static int[] getFragmentOfRecording(DataOutputStream out, DataInputStream in, int patientId) {
-        try {
 
-            out.writeUTF("GET_FRAGMENT_OF_RECORDING");
-            out.writeInt(patientId);
-            out.flush();
-
-
-            String responseType = in.readUTF();
-            if (!"FRAGMENTS".equals(responseType)) {
-                System.err.println("Unexpected server response type for fragments: " + responseType);
-                return new int[0];
-            }
-
-            int size = in.readInt();
-            int[] fragments = new int[size];
-            for (int i = 0; i < size; i++) {
-                fragments[i] = in.readInt();
-            }
-            return fragments;
-        } catch (IOException e) {
-            System.err.println("I/O error while requesting fragments of recording: " + e.getMessage());
-            return new int[0];
-        }
-    }
 
     // 2)
     private static List<Boolean> getSateOfFragmentsOfRecordingByID(DataOutputStream out, DataInputStream in, int patientId, int[] fragmentIds) {
@@ -940,42 +968,7 @@ public class PatientServerConnection {
         }
     }
 
-    private static void sendSymptomsInteractive(Scanner scanner,
-                                                DataOutputStream out,
-                                                DataInputStream in,
-                                                int diagnosisFileId) {
-        try {
-            System.out.println("\nSelect symptoms from the list (IDs). Example input: 1,3,5");
-            System.out.println("1 - Pain\n2 - Difficulty holding objects\n3 - Trouble breathing\n4 - Trouble swallowing\n5 - Trouble sleeping\n6 - Fatigue");
-            System.out.print("Enter symptom IDs separated by commas (or leave blank for none): ");
-            String line = scanner.nextLine().trim();
-            String[] tokens = line.isEmpty() ? new String[0] : line.split(",");
 
-            out.writeUTF("SYMPTOMS");
-            out.writeInt(diagnosisFileId);  // asociamos síntomas a este DiagnosisFile
-            out.writeInt(tokens.length);
-            for (String t : tokens) {
-                try {
-                    int id = Integer.parseInt(t.trim());
-                    out.writeInt(id);
-                } catch (NumberFormatException nfe) {
-                    out.writeInt(-1);
-                }
-            }
-            out.writeUTF(LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss")));
-            out.flush();
-
-            String response = in.readUTF();
-            if ("ACK".equals(response)) {
-                String msg = in.readUTF();
-                System.out.println("Server: " + msg);
-            } else {
-                System.err.println("Server response: " + response);
-            }
-        } catch (IOException e) {
-            System.err.println("I/O error sending symptoms: " + e.getMessage());
-        }
-    }
 
     private static void releaseResources(BITalino bitalino, Socket socket, DataOutputStream outputStream, Scanner scanner, DataInputStream inputStream) {
         if (scanner != null) {
@@ -1006,7 +999,7 @@ public class PatientServerConnection {
         }
     }
 
-    // Reflection-safe extractors for Frame timestamp and analog values
+  // Reflection-safe extractors for Frame timestamp and analog values
     private static long extractTimestamp(Frame f) {
         if (f == null) return System.currentTimeMillis();
         String[] names = {"getTimestamp", "getTime", "getDate", "getSeq", "getSequence", "timestamp"};
