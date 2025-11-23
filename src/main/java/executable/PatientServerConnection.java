@@ -501,10 +501,21 @@ public class PatientServerConnection {
             System.err.println("I/O error during START: " + e.getMessage());
             return false;
         }
+    }
+    private static String readyToRecord (DataInputStream in){
+        if( in == null) return null;
+        try {
+            String response = in.readUTF();
+            return response;
 
+        } catch (IOException e) {
+            System.err.println("I/O error during READY TO RECORD: " + e.getMessage());
+            return null;
+        }
     }
 
     // SEND FRAGMENT OF RECORDING
+
     private static boolean stopRecording(DataOutputStream outputStream){
         if( outputStream == null) return false;
         try {
