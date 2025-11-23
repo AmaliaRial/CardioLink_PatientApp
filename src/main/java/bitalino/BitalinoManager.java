@@ -4,6 +4,7 @@ package bitalino;
 
 import pojos.Patient;
 
+import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
@@ -63,6 +64,7 @@ public class BitalinoManager {
      * @param patient The patient for whom to record data.
      * @throws BITalinoException if the device is not idle or other errors occur.
      */
+    /*
     public void startRecording(Patient patient) throws BITalinoException {
         if (isRecording) {
             throw new BITalinoException(BITalinoErrorTypes.DEVICE_NOT_IDLE);
@@ -70,18 +72,24 @@ public class BitalinoManager {
 
         isRecording = true;
         recordingThread = new Thread(() -> {
-            ArrayList<int[]> data = new ArrayList<>();
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
             String fileName = patient.getNamePatient() + "_ECG_EDA_" + sdf.format(new Date()) + ".txt";
+
+            StringBuilder ecgBuilder = new StringBuilder();
+            StringBuilder edaBuilder = new StringBuilder();
 
             try {
                 try {
                     bitalino.start(CHANNELS);
                 } catch (Throwable t) {
-                    throw new BITalinoException(BITalinoErrorTypes.DEVICE_NOT_IDLE);
+                    try {
+                        throw new BITalinoException(BITalinoErrorTypes.DEVICE_NOT_IDLE);
+                    } catch (BITalinoException e) {
+                        throw new RuntimeException(e);
+                    }
                 }
                 System.out.println("Started recording on A2 (ECG) and A3 (EDA).");
-                int blockSize = 10;
+                int blockSize = 1000;
                 while (isRecording) {
                     Frame[] frames = bitalino.read(blockSize);
 
@@ -90,30 +98,44 @@ public class BitalinoManager {
 
                         int eda = frame.analog[1];// A3
 
-                        int [] sensorData = new int[]{ecg, eda};
-                        data.add(sensorData);
+                        if (ecgBuilder.length() > 0) {
+                            ecgBuilder.append(",");
+                        }
+                        ecgBuilder.append(ecg);
+
+                        // Añadimos valores de EDA separados por comas
+                        if (edaBuilder.length() > 0) {
+                            edaBuilder.append(",");
+                        }
+                        edaBuilder.append(eda);
                     }
                 }
+                catch (BITalinoException e) {
+                    throw new RuntimeException(e);
+                }finally{
+                    try {
+                        bitalino.stop();
+                    } catch (Throwable ignored) {
+                    }
 
-                bitalino.stop();
-                patient.receiveData(data);
+                    // Construimos el String final en el formato que quieres:
+                    // [ecg1,ecg2,...;eda1,eda2,...]
+                    String dataString = "[" + ecgBuilder.toString() + ";" + edaBuilder.toString() + "]";
 
-                saveDataToFile(fileName, data);
-                System.out.println("Recording stopped and saved to " + fileName);
+                    try {
+                        sendFragmentsOfRecording(dataString);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
 
-                // TODO: sendDataToServerDatabase(patient, data);
-
-            } catch (Exception e) {
-                try {
-                    throw new BITalinoException(BITalinoErrorTypes.LOST_COMMUNICATION);
-                } catch (BITalinoException ex) {
-                    ex.printStackTrace();
+                    isRecording = false;
+                    System.out.println("Recording stopped. Data saved to: " + fileName);
                 }
             }
-        });
 
-        recordingThread.start();
-    }
+        });
+            recordingThread.start();
+    } */
 
     /**
      * Stops the ongoing recording safely.
