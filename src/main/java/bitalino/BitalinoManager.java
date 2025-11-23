@@ -63,12 +63,13 @@ public class BitalinoManager {
      * @throws BITalinoException if the device is not idle or other errors occur.
      */
 
-    /*public void startRecording(Patient patient, DataOutputStream out) throws BITalinoException {
+    public void startRecording(Patient patient, DataOutputStream out) throws BITalinoException {
         if (isRecording) {
             throw new BITalinoException(BITalinoErrorTypes.DEVICE_NOT_IDLE);
         }
 
         isRecording = true;
+
         recordingThread = new Thread(() -> {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
             String fileName = patient.getNamePatient() + "_ECG_EDA_" + sdf.format(new Date()) + ".txt";
@@ -77,63 +78,61 @@ public class BitalinoManager {
             StringBuilder edaBuilder = new StringBuilder();
 
             try {
+                // Intentamos arrancar BITalino
                 try {
                     bitalino.start(CHANNELS);
                 } catch (Throwable t) {
-                    try {
-                        throw new BITalinoException(BITalinoErrorTypes.DEVICE_NOT_IDLE);
-                    } catch (BITalinoException e) {
-                        throw new RuntimeException(e);
-                    }
+                    throw new BITalinoException(BITalinoErrorTypes.DEVICE_NOT_IDLE);
                 }
+
                 System.out.println("Started recording on A2 (ECG) and A3 (EDA).");
+
                 int blockSize = 1000;
+
                 while (isRecording) {
                     Frame[] frames = bitalino.read(blockSize);
 
                     for (Frame frame : frames) {
-                        int ecg = frame.analog[0]; // A2
+                        int ecg = frame.analog[0]; // ECG A2
+                        int eda = frame.analog[1]; // EDA A3
 
-                        int eda = frame.analog[1];// A3
-
-                        if (ecgBuilder.length() > 0) {
-                            ecgBuilder.append(",");
-                        }
+                        // Guardar ECG
+                        if (ecgBuilder.length() > 0) ecgBuilder.append(",");
                         ecgBuilder.append(ecg);
 
-                        // Añadimos valores de EDA separados por comas
-                        if (edaBuilder.length() > 0) {
-                            edaBuilder.append(",");
-                        }
+                        // Guardar EDA
+                        if (edaBuilder.length() > 0) edaBuilder.append(",");
                         edaBuilder.append(eda);
                     }
                 }
-                catch (BITalinoException e) {
-                    throw new RuntimeException(e);
-                }finally{
-                    try {
-                        bitalino.stop();
-                    } catch (Throwable ignored) {
-                    }
 
-                    // Construimos el String final en el formato que quieres:
-                    // [ecg1,ecg2,...;eda1,eda2,...]
-                    String dataString = "[" + ecgBuilder.toString() + ";" + edaBuilder.toString() + "]";
+            } catch (BITalinoException e) {
+                throw new RuntimeException(e);
 
-                    try {
-                        PatientServerConnection.sendFragmentsOfRecording(dataString, out);
-                    } catch (Exception e) {
-                        e.printStackTrace();
-                    }
+            } finally {
+                // Detener BITalino
+                try {
+                    bitalino.stop();
+                } catch (Throwable ignored) {}
 
-                    isRecording = false;
-                    System.out.println("Recording stopped. Data saved to: " + fileName);
+                // Construir string final en el formato pedido
+                String dataString = "[" + ecgBuilder.toString() + ";" + edaBuilder.toString() + "]";
+
+                // Enviar al servidor
+                try {
+                    PatientServerConnection.sendFragmentsOfRecording(dataString, out);
+                } catch (Exception e) {
+                    e.printStackTrace();
                 }
-            }
 
+                isRecording = false;
+                System.out.println("Recording stopped. Data saved to: " + fileName);
+            }
         });
-            recordingThread.start();
-    }*/
+
+        recordingThread.start();
+    }
+
 
     /**
      * Stops the ongoing recording safely.
