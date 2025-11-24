@@ -162,6 +162,7 @@ public class PatientServerConnection {
                     done = true;
                     break;
                 }
+                //Creemos que estos metodos no se necesitan.
 
                 // 1) Crear DiagnosisFile en el servidor y obtener la primary key
                 int diagnosisFileId = openNewDiagnosisFileOnServer(outputStream, inputStream, username);
@@ -488,9 +489,12 @@ public class PatientServerConnection {
             return null;
         }
     }
-
+    // Aquí tenemos que crear los handles
     // Recorging lifecycle
     //"START"
+    private void handleStartRecording(){
+
+    }
     private static boolean startRecording(DataOutputStream out){
         if( out == null) return false;
         try {
