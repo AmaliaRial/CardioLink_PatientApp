@@ -87,13 +87,18 @@ public class DiagnosisFile {
 
     @Override
     public String toString() {
+        String symptomsString = (symptoms != null && !symptoms.isEmpty())
+                ? String.join(", ", symptoms)
+                : "";
+
         return "MedicalRecord{" +
                 "id='" + id + '\'' +
-                ", symptoms='" + symptoms + '\'' +
+                ", symptoms='" + symptomsString + '\'' +
                 ", diagnosis='" + diagnosis + '\'' +
                 ", medication='" + medication + '\'' +
-                ", date=" + date +
-                ", patient id=" + patientId +
+                ", date=" + date + '\'' +
+                ", patient id=" + patientId + '\'' +
+                ", status=" + status + '\'' +
                 '}';
     }
 

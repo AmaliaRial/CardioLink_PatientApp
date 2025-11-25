@@ -8,10 +8,7 @@ import pojos.Patient;
 import pojos.DiagnosisFile;
 import pojos.enums.Sex;
 
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
+import java.io.*;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.Socket;
@@ -22,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -1130,4 +1128,132 @@ public class PatientServerConnection {
         // last fallback: empty array
         return new int[0];
     }
+
+    private void viewPatient(Patient patient, DataOutputStream out, DataInputStream in) {
+        try {
+
+            out.writeUTF("VIEW_PATIENT");
+
+            String serverResponse = in.readUTF();
+
+            // Separar la respuesta recibida, respuesta será algo como: "DoctorName; DiagnosisFile_toString \n DiagnosisFile_toString \n ..."
+            String[] parts = serverResponse.split(";");
+
+            String doctorName = parts[0].trim();
+
+            String[] diagnosisFilesData = parts[1].split("\n");
+
+            // Crear una lista de DiagnosisFile
+            List<DiagnosisFile> diagnosisFiles = new ArrayList<>();
+            for (String diagnosisData : diagnosisFilesData) {
+                DiagnosisFile diagnosisFile = new DiagnosisFile();
+
+                diagnosisData = diagnosisData.replace("MedicalRecord{", "").replace("}", "");
+                String[] attributes = diagnosisData.split(", ");
+
+                for (String attribute : attributes) {
+                    String[] keyValue = attribute.split("=");
+                    String key = keyValue[0].trim();
+                    String value = keyValue[1].trim().replace("'", "");
+
+                    switch (key) {
+                        case "id":
+                            diagnosisFile.setId(Integer.parseInt(value));
+                            break;
+                        case "symptoms":
+                            diagnosisFile.setSymptoms((ArrayList<String>) Arrays.asList(value.split(", ")));
+                            break;
+                        case "diagnosis":
+                            diagnosisFile.setDiagnosis(value);
+                            break;
+                        case "medication":
+                            diagnosisFile.setMedication(value);
+                            break;
+                        case "date":
+                            diagnosisFile.setDate(LocalDate.parse(value));
+                            break;
+                        case "patient id":
+                            diagnosisFile.setPatientId(Integer.parseInt(value));
+                            break;
+                        case "status":
+                            diagnosisFile.setStatus(Boolean.parseBoolean(value));
+                            break;
+                    }
+                }
+                diagnosisFiles.add(diagnosisFile);
+            }
+
+            out.writeUTF("PATIENT_OVERVIEW_SENT");
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void viewRecording(String diagnosisFileId, DataOutputStream out, DataInputStream in) throws IOException {
+        out.writeUTF("VIEW_RECORDING");
+
+        String message = diagnosisFileId + ",1";
+        out.writeUTF(message);
+
+        String fragment = in.readUTF();
+        String statesString = in.readUTF();
+
+        List<Boolean> stateList = new ArrayList<>();
+        if (!statesString.isEmpty()) {
+            String[] parts = statesString.split(",");
+            for (String p : parts) {
+                stateList.add(Boolean.parseBoolean(p.trim()));
+            }
+        }
+    }
+
+    private void changeFragment(String diagnosisFileId, int sequence, DataOutputStream out, DataInputStream in) throws IOException {
+        // 1. Enviar comando al servidor
+        out.writeUTF("CHANGE_FRAGMENT");
+
+        String message = diagnosisFileId + "," + sequence;
+        out.writeUTF(message);
+
+        String fragment = in.readUTF();
+        String confirmation = in.readUTF();
+    }
+
+    private void downloadRecording(String diagnosisFileId, DataOutputStream out, DataInputStream in) throws IOException {
+        out.writeUTF("DOWNLOAD_RECORDING");
+        out.writeUTF(diagnosisFileId);
+        String status = in.readUTF();
+
+        // Si no es el mensaje esperado, salimos sin hacer nada más
+        if (!"SENDING_RECORDING".equals(status)) {
+            return;
+        }
+
+        String ecgString = in.readUTF();
+        String edaString = in.readUTF();
+
+        String[] ecgValues = ecgString.split(",");
+        String[] edaValues = edaString.split(",");
+        int length = Math.min(ecgValues.length, edaValues.length);
+
+        // 6. Crear el CSV: una columna ECG y otra EDA
+        String fileName = "recording_" + diagnosisFileId + ".csv";
+
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) {
+            // Cabecera
+            writer.write("ECG,EDA");
+            writer.newLine();
+            // Datos fila a fila
+            for (int i = 0; i < length; i++) {
+                String ecgSample = ecgValues[i].trim();
+                String edaSample = edaValues[i].trim();
+
+                writer.write(ecgSample + "," + edaSample);
+                writer.newLine();
+            }
+        }
+    }
+
+
+
 }
