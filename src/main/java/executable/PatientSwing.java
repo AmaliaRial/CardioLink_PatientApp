@@ -537,7 +537,7 @@ public class PatientSwing extends JFrame {
 
             JButton btnBitalinoReturn = new JButton("Return");
             btnBitalinoReturn.setFocusPainted(false);
-            btnBitalinoReturn.addActionListener(e -> handleReturnFromBitalinoPanel());
+            btnBitalinoReturn.addActionListener(e -> handleLogout());
             b.gridx = 0;
             b.gridy = 1;
             b.weightx = 0;
@@ -682,14 +682,17 @@ public class PatientSwing extends JFrame {
                     out.flush();
 
                     String statusResp = in.readUTF();
+                    System.out.println(statusResp);
 
                     if ("LOGIN_RESULT".equals(statusResp)) {
                         boolean ok = in.readBoolean();
                         serverMsg = in.readUTF();
+                        serverMsg = serverMsg+ "->"+ in.readUTF();
                         success = ok;
                         if (success) currentUsername = username;
                     } else {
                         serverMsg = "Respuesta inesperada del servidor";
+                        serverMsg = serverMsg+ "->"+ in.readUTF();
                     }
                 } catch (SocketTimeoutException ste) {
                     serverMsg = "Timeout al comunicarse con el servidor.";
@@ -799,9 +802,11 @@ public class PatientSwing extends JFrame {
                     String resp = in.readUTF();
                     if ("ACK".equals(resp)) {
                         ok = true;
-                        msg = "Account created";
+                        msg = in.readUTF();
+                        msg = msg+ "->"+ in.readUTF();
                     } else {
                         msg = "Server error: " + resp;
+                        msg = msg+ "->"+ in.readUTF();
                     }
                 } catch (IOException ex) {
                     msg = "I/O error: " + ex.getMessage();
@@ -823,12 +828,14 @@ public class PatientSwing extends JFrame {
         }.execute();
     }
 
-    private void handleReturnFromBitalinoPanel(){
+    private void handleLogout(){
         try {
             out.writeUTF("LOG_OUT");
+            out.flush();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        currentUsername = null;
         changeState("AUTH");
 
     }

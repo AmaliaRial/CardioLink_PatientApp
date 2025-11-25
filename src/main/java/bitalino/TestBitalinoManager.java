@@ -2,6 +2,9 @@ package bitalino;
 
 import pojos.Patient;
 
+import java.io.DataOutputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
 import java.util.Scanner;
 
 
@@ -30,7 +33,7 @@ public class TestBitalinoManager {
             manager.connect(macAddress);
 
             // Start recording
-            //manager.startRecording(patient); // Uncomment if you have a Patient object
+           // manager.startRecording(patient); // Uncomment if you have a Patient object
             System.out.println("Recording started. Press ENTER to stop...");
 
             // Wait for user to hit Enter
