@@ -824,12 +824,13 @@ public class PatientSwing extends JFrame {
     }
 
     private void handleReturnFromBitalinoPanel(){
-        changeState("AUTH");
         try {
             out.writeUTF("LOG_OUT");
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
+        changeState("AUTH");
+
     }
 
     private void handleViewDiagnosisFile() {
