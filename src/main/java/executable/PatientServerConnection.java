@@ -1254,6 +1254,42 @@ public class PatientServerConnection {
         }
     }
 
+    private static void downloadDiagnosisFile(DiagnosisFile df){
+        if (df == null) {
+            System.err.println("DiagnosisFile is null");
+            return;
+        }
+        Integer diagnosisId = null;
+        try { diagnosisId = df.getId(); } catch (Throwable ignored) {}
+        if (diagnosisId == null || diagnosisId < 0) {
+            System.err.println("Invalid diagnosis id");
+            return;
+        }
 
+        String userHome = System.getProperty("user.home");
+        java.nio.file.Path downloads = java.nio.file.Paths.get(userHome, "Downloads");
+        try {
+            java.nio.file.Files.createDirectories(downloads);
+        } catch (IOException e) {
+            System.err.println("Cannot create Downloads folder: " + e.getMessage());
+            return;
+        }
+
+        System.out.println("Downloading Diagnosis File ID: " + diagnosisId);
+        String idDF = String.valueOf(diagnosisId);
+        String fileName = "diagnosis_" + diagnosisId + ".txt";
+        java.nio.file.Path out = downloads.resolve(fileName);
+
+        try (java.io.BufferedWriter bw = java.nio.file.Files.newBufferedWriter(out,
+                java.nio.file.StandardOpenOption.CREATE,
+                java.nio.file.StandardOpenOption.TRUNCATE_EXISTING)) {
+            bw.write(df.toString());
+            bw.flush();
+            System.out.println("Saved diagnosis text to " + out.toString());
+        } catch (IOException e) {
+            System.err.println("Error saving diagnosis file: " + e.getMessage());
+        }
+
+    }
 
 }
