@@ -537,7 +537,7 @@ public class PatientSwing extends JFrame {
 
             JButton btnBitalinoReturn = new JButton("Return");
             btnBitalinoReturn.setFocusPainted(false);
-            btnBitalinoReturn.addActionListener(e -> changeState("AUTH"));
+            btnBitalinoReturn.addActionListener(e -> handleReturnFromBitalinoPanel());
             b.gridx = 0;
             b.gridy = 1;
             b.weightx = 0;
@@ -814,13 +814,22 @@ public class PatientSwing extends JFrame {
             protected void done() {
                 if (ok) {
                     JOptionPane.showMessageDialog(PatientSwing.this, msg != null ? msg : "Account created successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
-                    changeState("LOGIN");
+                    changeState("BITALINO");
                     registerPanel.clearFields();
                 } else {
                     JOptionPane.showMessageDialog(PatientSwing.this, "Registration failed: " + (msg != null ? msg : "Unknown error"), "Error", JOptionPane.ERROR_MESSAGE);
                 }
             }
         }.execute();
+    }
+
+    private void handleReturnFromBitalinoPanel(){
+        changeState("AUTH");
+        try {
+            out.writeUTF("LOG_OUT");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     private void handleViewDiagnosisFile() {
@@ -920,7 +929,7 @@ public class PatientSwing extends JFrame {
     }
 
     // -----------------------
-    // Métodos de utilidad (los mismos que antes)
+    // Métodos de utilidad
     // -----------------------
 
     private String[] askServerHostPortIfNotConnected() {
