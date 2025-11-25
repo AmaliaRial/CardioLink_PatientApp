@@ -23,7 +23,7 @@ public class Main {
                 }
 
                 try {
-                    manager.startRecording(patient);
+                    //manager.startRecording(patient);
 
 
                     System.out.println("Grabando datos de ECG y EDA para el paciente...");
