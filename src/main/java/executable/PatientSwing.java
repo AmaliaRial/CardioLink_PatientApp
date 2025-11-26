@@ -1164,7 +1164,15 @@ public class PatientSwing extends JFrame {
             e.printStackTrace();
         }
     }
+/*public static void sendFragmentsOfRecording(String dataString, DataOutputStream out) {
+        try {
 
+            out.writeUTF(dataString);
+            out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }*/
     private static boolean stopRecording(DataOutputStream outputStream) {
         if (outputStream == null) return false;
         try {
