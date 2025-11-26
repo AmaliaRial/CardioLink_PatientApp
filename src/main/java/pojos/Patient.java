@@ -172,6 +172,7 @@ public class Patient implements PatientInterface {
         return "Patient{" +
                 "idPatient=" + idPatient +
                 ", namePatient='" + namePatient + '\'' +
+                ", surnamePatient='" +surnamePatient+ '\'' +
                 ", dniPatient='" + dniPatient + '\'' +
                 ", dobPatient=" + dobPatient +
                 ", emailPatient='" + emailPatient + '\'' +
