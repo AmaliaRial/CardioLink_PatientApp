@@ -2,6 +2,7 @@ package bitalino;
 
 
 
+import executable.PatientSwing;
 import pojos.Patient;
 
 import java.io.*;
@@ -59,11 +60,12 @@ public class BitalinoManager {
 
     /**
      * Starts recording ECG and EDA data for the specified patient.
-     * @param patient The patient for whom to record data.
+     *
      * @throws BITalinoException if the device is not idle or other errors occur.
      */
 
-    public void startRecording(Patient patient, DataOutputStream out) throws BITalinoException {
+
+    public void startRecording(DataOutputStream out) throws BITalinoException {
         if (isRecording) {
             throw new BITalinoException(BITalinoErrorTypes.DEVICE_NOT_IDLE);
         }
@@ -72,13 +74,14 @@ public class BitalinoManager {
 
         recordingThread = new Thread(() -> {
             SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
-            String fileName = patient.getNamePatient() + "_ECG_EDA_" + sdf.format(new Date()) + ".txt";
+            //String fileName = patient.getNamePatient() + "_ECG_EDA_" + sdf.format(new Date()) + ".txt";
 
             StringBuilder ecgBuilder = new StringBuilder();
             StringBuilder edaBuilder = new StringBuilder();
+            int samplesPerPacket = SAMPLING_RATE * 10; // 10 segundos
+            int sampleCount = 0;
 
             try {
-                // Intentamos arrancar BITalino
                 try {
                     bitalino.start(CHANNELS);
                 } catch (Throwable t) {
@@ -90,43 +93,60 @@ public class BitalinoManager {
                 int blockSize = 1000;
 
                 while (isRecording) {
-                    Frame[] frames = bitalino.read(blockSize);
+                    Frame[] frames;
+                    try {
+                        frames = bitalino.read(blockSize);
+                    } catch (Throwable t) {
+                        t.printStackTrace();
+                        break;
+                    }
 
                     for (Frame frame : frames) {
                         int ecg = frame.analog[0]; // ECG A2
                         int eda = frame.analog[1]; // EDA A3
 
-                        // Guardar ECG
                         if (ecgBuilder.length() > 0) ecgBuilder.append(",");
                         ecgBuilder.append(ecg);
 
-                        // Guardar EDA
                         if (edaBuilder.length() > 0) edaBuilder.append(",");
                         edaBuilder.append(eda);
+
+                        sampleCount++;
+
+                        if (sampleCount >= samplesPerPacket) {
+                            String dataString = "[" + ecgBuilder.toString() + ";" + edaBuilder.toString() + "]";
+                            try {
+                                PatientSwing.sendFragmentsOfRecording(dataString, out);
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                            // reset for next packet
+                            ecgBuilder.setLength(0);
+                            edaBuilder.setLength(0);
+                            sampleCount = 0;
+                        }
                     }
                 }
 
             } catch (BITalinoException e) {
                 throw new RuntimeException(e);
-
             } finally {
-                // Detener BITalino
                 try {
                     bitalino.stop();
                 } catch (Throwable ignored) {}
 
-                // Construir string final en el formato pedido
-                String dataString = "[" + ecgBuilder.toString() + ";" + edaBuilder.toString() + "]";
-
-                // Enviar al servidor
-                try {
-                    PatientServerConnection.sendFragmentsOfRecording(dataString, out);
-                } catch (Exception e) {
-                    e.printStackTrace();
+                // Enviar resto parcial si existe
+                if (sampleCount > 0 && (ecgBuilder.length() > 0 || edaBuilder.length() > 0)) {
+                    String dataString = "[" + ecgBuilder.toString() + ";" + edaBuilder.toString() + "]";
+                    try {
+                        PatientServerConnection.sendFragmentsOfRecording(dataString, out);
+                    } catch (Exception e) {
+                        e.printStackTrace();
+                    }
                 }
 
                 isRecording = false;
-                System.out.println("Recording stopped. Data saved to: " + fileName);
+                //System.out.println("Recording stopped. Data saved to: " + fileName);
             }
         });
 

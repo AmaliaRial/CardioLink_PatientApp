@@ -1,5 +1,9 @@
 package executable;
 
+import bitalino.BITalinoException;
+import bitalino.BitalinoManager;
+import pojos.Patient;
+
 import javax.swing.*;
 import javax.swing.plaf.basic.BasicButtonUI;
 import java.awt.*;
@@ -15,10 +19,13 @@ import java.util.*;
 import java.util.List;
 import java.util.regex.Pattern;
 
+
 public class PatientSwing extends JFrame {
+    BitalinoManager bitalinoManager = new BitalinoManager();
 
     private CardLayout cardLayout;
     private JPanel cardsPanel;
+    private Patient patient;
 
     // Estados/paneles
     private static final String HOME_PANEL = "Home Panel";
@@ -866,15 +873,15 @@ public class PatientSwing extends JFrame {
                         return null;
                     }
                     recording = true;
-                    int fragIdx = 0;
                     while (!stopRequested) {
-                        String fragment = "fragment_data_" + fragIdx++;
-                        sendFragmentsOfRecording(fragment, out);
+                        bitalinoManager.startRecording(out);
                         try {
                             Thread.sleep(400);
                         } catch (InterruptedException ignored) {
                         }
                     }
+                } catch (BITalinoException e) {
+                    throw new RuntimeException(e);
                 } finally {
                     recording = false;
                 }
