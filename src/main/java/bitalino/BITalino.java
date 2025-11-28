@@ -159,6 +159,7 @@ public class BITalino {
             }
             try
             {
+                System.out.println("hallegado aqui");
                 Write(bit);
             }
             catch(Exception e)

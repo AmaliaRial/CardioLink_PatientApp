@@ -30,7 +30,7 @@ public class Main {
                     Thread.sleep(10000); // graba 10 segundos como ejemplo
 
 
-                    manager.stopRecording();
+                    //manager.stopRecording();
                     System.out.println("Grabación detenida.");
 
                 } catch (Exception e) {

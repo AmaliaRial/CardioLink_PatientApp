@@ -63,9 +63,99 @@ public class BitalinoManager {
      *
      * @throws BITalinoException if the device is not idle or other errors occur.
      */
+    public synchronized void startRecordingToServer(DataOutputStream out) throws BITalinoException {
+        if (isRecording) return;
+        if (out == null) throw new IllegalArgumentException("Output stream null");
+        isRecording = true;
 
 
-    public void startRecording(DataOutputStream out) throws BITalinoException {
+        recordingThread = new Thread(() -> {
+            StringBuilder ecgBuilder = new StringBuilder();
+            StringBuilder edaBuilder = new StringBuilder();
+            int sampleCount = 0;
+            final int samplesPerPacket = 200; // ajustar según necesidad
+            final int blockSize = 100; // cuantos frames pedir a bitalino.read()
+
+
+            try {
+                // Asegurarse de que el dispositivo esté en modo adquisición
+                bitalino.start(CHANNELS);
+
+
+                while (isRecording) {
+                    Frame[] frames = bitalino.read(blockSize);
+                    if (frames == null || frames.length == 0) continue;
+
+
+                    for (Frame f : frames) {
+                        int ecg = f.analog[0];
+                        int eda = f.analog[1];
+
+
+                        if (ecgBuilder.length() > 0) ecgBuilder.append(",");
+                        ecgBuilder.append(ecg);
+
+
+                        if (edaBuilder.length() > 0) edaBuilder.append(",");
+                        edaBuilder.append(eda);
+
+
+                        sampleCount++;
+
+
+                        if (sampleCount >= samplesPerPacket) {
+                            String dataString = "[" + ecgBuilder.toString() + ";" + edaBuilder.toString() + "]";
+                            try {
+                                synchronized (out) {
+                                    out.writeUTF("SEND_FRAGMENTS_OF_RECORDING");
+                                    out.writeUTF(dataString);
+                                    out.flush();
+                                }
+                            } catch (IOException ioe) {
+                                ioe.printStackTrace();
+                                // si falla la escritura, salir del bucle de grabación
+                                isRecording = false;
+                                break;
+                            }
+                            ecgBuilder.setLength(0);
+                            edaBuilder.setLength(0);
+                            sampleCount = 0;
+                        }
+                    }
+                }
+            } catch (BITalinoException be) {
+                be.printStackTrace();
+            } catch (Throwable e) {
+                throw new RuntimeException(e);
+            } finally {
+                // intentar parar el dispositivo y enviar restos pendientes
+                try { bitalino.stop(); } catch (Throwable ignored) {}
+
+
+                if (sampleCount > 0 && (ecgBuilder.length() > 0 || edaBuilder.length() > 0)) {
+                    String dataString = "[" + ecgBuilder.toString() + ";" + edaBuilder.toString() + "]";
+                    try {
+                        synchronized (out) {
+                            out.writeUTF("SEND_FRAGMENTS_OF_RECORDING");
+                            out.writeUTF(dataString);
+                            out.flush();
+                        }
+                    } catch (IOException ignored) {}
+                }
+
+
+                isRecording = false;
+            }
+        }, "BITalino-Recording-Thread");
+
+
+        recordingThread.setDaemon(true);
+        recordingThread.start();
+    }
+
+
+/*
+    public void startRecordingThread(DataOutputStream out) throws BITalinoException {
         if (isRecording) {
             throw new BITalinoException(BITalinoErrorTypes.DEVICE_NOT_IDLE);
         }
@@ -151,14 +241,28 @@ public class BitalinoManager {
         });
 
         recordingThread.start();
-    }
+    }*/
 
 
     /**
      * Stops the ongoing recording safely.
      * @throws BITalinoException if the device is not in acquisition mode or other errors occur.
      */
-    public void stopRecording() throws BITalinoException {
+    public synchronized void requestStopRecording() {
+        isRecording = false;
+        if (recordingThread != null) {
+            recordingThread.interrupt();
+            try {
+                recordingThread.join(1500);
+            } catch (InterruptedException ignored) {
+                Thread.currentThread().interrupt();
+            }
+        }
+        recordingThread = null;
+    }
+
+
+   public void stopRecording() throws BITalinoException {
         if (!isRecording) {
             throw new BITalinoException(BITalinoErrorTypes.DEVICE_NOT_IN_ACQUISITION_MODE);
         }
@@ -173,6 +277,57 @@ public class BitalinoManager {
             Thread.currentThread().interrupt();
             throw new BITalinoException(BITalinoErrorTypes.LOST_COMMUNICATION);
         }
+    }
+    /**
+     * Starts recording ECG (A2) and EDA (A3) signals.
+     * Recording continues until stopRecording() is called.
+     */
+    public void startRecording(String patientName) throws BITalinoException {
+        if (isRecording) {
+            throw new BITalinoException(BITalinoErrorTypes.DEVICE_NOT_IDLE);
+        }
+
+        isRecording = true;
+        recordingThread = new Thread(() -> {
+            ArrayList<int[]> data = new ArrayList<>();
+            SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd_HH-mm-ss");
+            String fileName = patientName + "_ECG_EDA_" + sdf.format(new Date()) + ".txt";
+
+            try {
+                try {
+                    bitalino.start(CHANNELS);
+                } catch (Throwable t) {
+                    throw new BITalinoException(BITalinoErrorTypes.DEVICE_NOT_IDLE);
+                }
+                System.out.println("Started recording on A2 (ECG) and A3 (EDA).");
+
+                int blockSize = 10;
+                while (isRecording) {
+                    Frame[] frames = bitalino.read(blockSize);
+
+                    for (Frame frame : frames) {
+                        int ecg = frame.analog[0]; // A2
+                        int eda = frame.analog[1]; // A3
+                        data.add(new int[]{ecg, eda});
+                    }
+                }
+
+                bitalino.stop();
+                saveDataToFile(fileName, data);
+                System.out.println("Recording stopped and saved to " + fileName);
+
+                // TODO: sendDataToServerDatabase(patientName, data);
+
+            } catch (Exception e) {
+                try {
+                    throw new BITalinoException(BITalinoErrorTypes.LOST_COMMUNICATION);
+                } catch (BITalinoException ex) {
+                    ex.printStackTrace();
+                }
+            }
+        });
+
+        recordingThread.start();
     }
 
     /**

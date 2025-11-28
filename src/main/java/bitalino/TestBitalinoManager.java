@@ -33,7 +33,7 @@ public class TestBitalinoManager {
             manager.connect(macAddress);
 
             // Start recording
-           // manager.startRecording(patient); // Uncomment if you have a Patient object
+            manager.startRecording(patientName); // Uncomment if you have a Patient object
             System.out.println("Recording started. Press ENTER to stop...");
 
             // Wait for user to hit Enter

@@ -872,14 +872,8 @@ public class PatientSwing extends JFrame {
                         SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(PatientSwing.this, "Servidor no listo para grabar", "Error", JOptionPane.ERROR_MESSAGE));
                         return null;
                     }
-                    recording = true;
-                    while (!stopRequested) {
-                        bitalinoManager.startRecording(out);
-                        try {
-                            Thread.sleep(400);
-                        } catch (InterruptedException ignored) {
-                        }
-                    }
+                    // arrancar hilo de lectura/envío desde BitalinoManager
+                    bitalinoManager.startRecordingToServer(out);
                 } catch (BITalinoException e) {
                     throw new RuntimeException(e);
                 } finally {
@@ -911,6 +905,8 @@ public class PatientSwing extends JFrame {
                     SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(PatientSwing.this, "Error enviando STOP", "Error", JOptionPane.ERROR_MESSAGE));
                     return null;
                 }
+                // Pedir al manager que pare la adquisición local
+                bitalinoManager.requestStopRecording();
                 if (!RecordingStop(in)) {
                     SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(PatientSwing.this, "No se confirmó STOP por el servidor", "Error", JOptionPane.ERROR_MESSAGE));
                     return null;
