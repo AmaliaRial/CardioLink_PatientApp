@@ -1121,6 +1121,7 @@ public class MenuPatientSwing extends JFrame {
         if (in == null) return false;
         try {
             String response = in.readUTF();
+            System.out.println(response);
             return "READY_TO_RECORD".equals(response);
         } catch (IOException e) {
             System.err.println("I/O error during READY_TO_RECORD: " + e.getMessage());

@@ -73,7 +73,7 @@ public class BitalinoManager {
             StringBuilder ecgBuilder = new StringBuilder();
             StringBuilder edaBuilder = new StringBuilder();
             int sampleCount = 0;
-            final int samplesPerPacket = 200; // ajustar según necesidad
+            final int samplesPerPacket = SAMPLING_RATE*10; // ajustar según necesidad
             final int blockSize = 100; // cuantos frames pedir a bitalino.read()
 
 
@@ -105,9 +105,11 @@ public class BitalinoManager {
 
                         if (sampleCount >= samplesPerPacket) {
                             String dataString = "[" + ecgBuilder.toString() + ";" + edaBuilder.toString() + "]";
+
                             try {
                                 synchronized (out) {
-                                    out.writeUTF("SEND_FRAGMENTS_OF_RECORDING");
+                                    System.out.println(dataString);
+                                    //out.writeUTF("SEND_FRAGMENTS_OF_RECORDING");
                                     out.writeUTF(dataString);
                                     out.flush();
                                 }

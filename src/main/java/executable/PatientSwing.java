@@ -1011,11 +1011,14 @@ public class PatientSwing extends JFrame {
                 protected Void doInBackground() {
                     try {
                         connectToServer(host, port, mac);
+                        bitalinoManager.connect(mac);
                         ok = true;
                         msg = "Connected to server";
                     } catch (IOException ex) {
                         msg = "Connect failed: " + ex.getMessage();
                         cleanupResources();
+                        } catch (BITalinoException ex) {
+                        throw new RuntimeException(ex);
                     }
                     return null;
                 }
