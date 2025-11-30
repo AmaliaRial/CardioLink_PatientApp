@@ -138,7 +138,6 @@ public class BitalinoManager {
                     String dataString = "[" + ecgBuilder.toString() + ";" + edaBuilder.toString() + "]";
                     try {
                         synchronized (out) {
-                            out.writeUTF("SEND_FRAGMENTS_OF_RECORDING");
                             out.writeUTF(dataString);
                             out.flush();
                         }
@@ -147,6 +146,15 @@ public class BitalinoManager {
 
 
                 isRecording = false;
+
+                try {
+                    out.writeUTF("STOP");
+                    out.flush();
+                    System.out.println("a llegado a intentar enviar stop");
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+
             }
         }, "BITalino-Recording-Thread");
 

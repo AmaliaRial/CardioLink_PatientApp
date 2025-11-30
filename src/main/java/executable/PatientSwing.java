@@ -631,6 +631,14 @@ public class PatientSwing extends JFrame {
         public void setContinueEnabled(boolean enabled) {
             btnContinueRec.setEnabled(enabled);
         }
+
+        public void setRecordingState(boolean recording) {
+            btnStart.setEnabled(!recording);
+            btnStop.setEnabled(recording);
+            // El botón de continuar solo se habilita cuando no se está grabando y ya se ha grabado algo (o cuando se ha detenido)
+            // Pero por ahora, lo manejamos en el flujo de stop.
+            // En el manejo de stop, luego de detener, se habilita el continue.
+        }
     }
 
     // Panel SYMPTOMS_SELECTOR
@@ -856,8 +864,8 @@ public class PatientSwing extends JFrame {
             JOptionPane.showMessageDialog(this, "No conectado al servidor", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        bitalinoRecordingPanel.setStartEnabled(false);
-        bitalinoRecordingPanel.setStopEnabled(true);
+        // Cambiar el estado de los botones inmediatamente
+        bitalinoRecordingPanel.setRecordingState(true);
         stopRequested = false;
 
         new SwingWorker<Void, Void>() {
@@ -865,27 +873,34 @@ public class PatientSwing extends JFrame {
             protected Void doInBackground() {
                 try {
                     if (!startRecording(out)) {
-                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(PatientSwing.this, "Error enviando START", "Error", JOptionPane.ERROR_MESSAGE));
+                        SwingUtilities.invokeLater(() -> {
+                            JOptionPane.showMessageDialog(PatientSwing.this, "Error enviando START", "Error", JOptionPane.ERROR_MESSAGE);
+                            bitalinoRecordingPanel.setRecordingState(false); // Revertir a estado no grabando
+                        });
                         return null;
                     }
                     if (!readyToRecord(in)) {
-                        SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(PatientSwing.this, "Servidor no listo para grabar", "Error", JOptionPane.ERROR_MESSAGE));
+                        SwingUtilities.invokeLater(() -> {
+                            JOptionPane.showMessageDialog(PatientSwing.this, "Servidor no listo para grabar", "Error", JOptionPane.ERROR_MESSAGE);
+                            bitalinoRecordingPanel.setRecordingState(false); // Revertir a estado no grabando
+                        });
                         return null;
                     }
                     // arrancar hilo de lectura/envío desde BitalinoManager
                     bitalinoManager.startRecordingToServer(out);
+                    recording = true;
                 } catch (BITalinoException e) {
-                    throw new RuntimeException(e);
-                } finally {
-                    recording = false;
+                    SwingUtilities.invokeLater(() -> {
+                        JOptionPane.showMessageDialog(PatientSwing.this, "Error en Bitalino: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                        bitalinoRecordingPanel.setRecordingState(false); // Revertir a estado no grabando
+                    });
                 }
                 return null;
             }
 
             @Override
             protected void done() {
-                bitalinoRecordingPanel.setStartEnabled(true);
-                bitalinoRecordingPanel.setStopEnabled(false);
+                // No hacemos nada aquí porque el estado se maneja con setRecordingState
             }
         }.execute();
     }
@@ -896,23 +911,35 @@ public class PatientSwing extends JFrame {
             return;
         }
         stopRequested = true;
-        bitalinoRecordingPanel.setStopEnabled(false);
+        // Cambiar el estado de los botones inmediatamente
+        bitalinoRecordingPanel.setRecordingState(false);
 
         new SwingWorker<Void, Void>() {
             @Override
             protected Void doInBackground() {
                 if (!stopRecording(out)) {
-                    SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(PatientSwing.this, "Error enviando STOP", "Error", JOptionPane.ERROR_MESSAGE));
+                    SwingUtilities.invokeLater(() -> {
+                        JOptionPane.showMessageDialog(PatientSwing.this, "Error enviando STOP", "Error", JOptionPane.ERROR_MESSAGE);
+                        // Revertir a estado grabando porque no se pudo detener
+                        bitalinoRecordingPanel.setRecordingState(true);
+                    });
                     return null;
                 }
                 // Pedir al manager que pare la adquisición local
                 bitalinoManager.requestStopRecording();
+                recording = false;
+
+
                 if (!RecordingStop(in)) {
-                    SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(PatientSwing.this, "No se confirmó STOP por el servidor", "Error", JOptionPane.ERROR_MESSAGE));
+                    SwingUtilities.invokeLater(() -> {
+                        JOptionPane.showMessageDialog(PatientSwing.this, "No se confirmó STOP por el servidor", "Error", JOptionPane.ERROR_MESSAGE);
+                    });
                     return null;
                 }
                 if (!SelectSymptoms(in)) {
-                    SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(PatientSwing.this, "Servidor no solicitó selección de síntomas", "Info", JOptionPane.INFORMATION_MESSAGE));
+                    SwingUtilities.invokeLater(() -> {
+                        JOptionPane.showMessageDialog(PatientSwing.this, "Servidor no solicitó selección de síntomas", "Info", JOptionPane.INFORMATION_MESSAGE);
+                    });
                     return null;
                 }
                 String csv = getSymptomsFromUser();
@@ -923,18 +950,21 @@ public class PatientSwing extends JFrame {
                     sendSymptoms(sc, out, in);
                 }
                 if (isSymptomsReceived(in)) {
-                    SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(PatientSwing.this, "Síntomas enviados y confirmados por el servidor", "Info", JOptionPane.INFORMATION_MESSAGE));
+                    SwingUtilities.invokeLater(() -> {
+                        JOptionPane.showMessageDialog(PatientSwing.this, "Síntomas enviados y confirmados por el servidor", "Info", JOptionPane.INFORMATION_MESSAGE);
+                    });
                 } else {
-                    SwingUtilities.invokeLater(() -> JOptionPane.showMessageDialog(PatientSwing.this, "Servidor no confirmó la recepción de síntomas", "Error", JOptionPane.ERROR_MESSAGE));
+                    SwingUtilities.invokeLater(() -> {
+                        JOptionPane.showMessageDialog(PatientSwing.this, "Servidor no confirmó la recepción de síntomas", "Error", JOptionPane.ERROR_MESSAGE);
+                    });
                 }
                 return null;
             }
 
             @Override
             protected void done() {
-                changeState("SYMPTOMS_SELECTOR");
-                bitalinoRecordingPanel.setStartEnabled(true);
-                bitalinoRecordingPanel.setStopEnabled(false);
+                // Habilitar el botón de continuar después de detener la grabación
+                bitalinoRecordingPanel.setContinueEnabled(true);
             }
         }.execute();
     }
@@ -1194,7 +1224,9 @@ public class PatientSwing extends JFrame {
     private static boolean RecordingStop(DataInputStream in) {
         if (in == null) return false;
         try {
+            in.readUTF();
             String response = in.readUTF();
+            System.out.println("respuesta recivida: "+response);
             return "RECORDING_STOP".equals(response);
         } catch (IOException e) {
             System.err.println("I/O error during RECORDING_STOP: " + e.getMessage());
