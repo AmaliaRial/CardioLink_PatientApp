@@ -562,7 +562,7 @@ public class PatientSwing extends JFrame {
     class BitalinoRecordingPanel extends JPanel {
         private JButton btnStart;
         private JButton btnStop;
-        private JButton btnContinueRec;
+        private JButton btnLogOut;
 
         public BitalinoRecordingPanel() {
             setLayout(new GridBagLayout());
@@ -590,20 +590,18 @@ public class PatientSwing extends JFrame {
             btnStop.setPreferredSize(new Dimension(320, 80));
             btnStop.setEnabled(false);
 
-            btnContinueRec = new JButton("Continue >>");
-            btnContinueRec.setBackground(new Color(11, 87, 147));
-            btnContinueRec.setForeground(Color.BLACK);
-            btnContinueRec.setOpaque(true);
-            btnContinueRec.setBorderPainted(false);
-            btnContinueRec.setFocusPainted(false);
-            btnContinueRec.setEnabled(false);
+            btnLogOut = new JButton("Log Out");
+            btnLogOut.setBackground(new Color(11, 87, 147));
+            btnLogOut.setForeground(Color.WHITE);
+            btnLogOut.setOpaque(true);
+            btnLogOut.setBorderPainted(false);
+            btnLogOut.setFocusPainted(false);
+            btnLogOut.setEnabled(true);
 
-            JButton btnReturnRec = new JButton("Return");
-            btnReturnRec.addActionListener(e -> changeState("BITALINO"));
 
             btnStart.addActionListener(e -> handleStartRecording());
             btnStop.addActionListener(e -> handleStopRecording());
-            btnContinueRec.addActionListener(e -> changeState("SYMPTOMS_SELECTOR"));
+            btnLogOut.addActionListener(e ->handleLogout());
 
             br.gridx = 0;
             br.gridy = 0;
@@ -614,10 +612,8 @@ public class PatientSwing extends JFrame {
             br.gridx = 0;
             br.gridy = 1;
             br.gridwidth = 2;
-            add(btnContinueRec, br);
-            br.gridx = 0;
-            br.gridy = 2;
-            add(btnReturnRec, br);
+            add(btnLogOut, br);
+
         }
 
         public void setStartEnabled(boolean enabled) {
@@ -629,12 +625,13 @@ public class PatientSwing extends JFrame {
         }
 
         public void setContinueEnabled(boolean enabled) {
-            btnContinueRec.setEnabled(enabled);
+            btnLogOut.setEnabled(enabled);
         }
 
         public void setRecordingState(boolean recording) {
             btnStart.setEnabled(!recording);
             btnStop.setEnabled(recording);
+            btnLogOut.setEnabled(!recording);
             // El botón de continuar solo se habilita cuando no se está grabando y ya se ha grabado algo (o cuando se ha detenido)
             // Pero por ahora, lo manejamos en el flujo de stop.
             // En el manejo de stop, luego de detener, se habilita el continue.
@@ -733,7 +730,7 @@ public class PatientSwing extends JFrame {
                     authPanel.setLoginEnabled(true);
                     authPanel.setRegisterEnabled(false);
                     JOptionPane.showMessageDialog(PatientSwing.this, serverMsg == null ? "Login successful" : serverMsg, "Success", JOptionPane.INFORMATION_MESSAGE);
-                    changeState("BITALINO");
+                    changeState("BITALINO_RECORDING");
                     loginPanel.clearFields();
                 } else {
                     JOptionPane.showMessageDialog(PatientSwing.this, "Login failed: " + (serverMsg == null ? "unknown" : serverMsg), "Error", JOptionPane.ERROR_MESSAGE);
@@ -834,7 +831,7 @@ public class PatientSwing extends JFrame {
             protected void done() {
                 if (ok) {
                     JOptionPane.showMessageDialog(PatientSwing.this, msg != null ? msg : "Account created successfully", "Success", JOptionPane.INFORMATION_MESSAGE);
-                    changeState("BITALINO");
+                    changeState("BITALINO_RECORDING");
                     registerPanel.clearFields();
                 } else {
                     JOptionPane.showMessageDialog(PatientSwing.this, "Registration failed: " + (msg != null ? msg : "Unknown error"), "Error", JOptionPane.ERROR_MESSAGE);
