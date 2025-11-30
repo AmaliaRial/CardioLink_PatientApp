@@ -887,7 +887,7 @@ public class PatientSwing extends JFrame {
                         return null;
                     }
                     // arrancar hilo de lectura/envío desde BitalinoManager
-                    bitalinoManager.startRecordingToServer(out);
+                    bitalinoManager.startRecordingToServer(out, in);
                     recording = true;
                 } catch (BITalinoException e) {
                     SwingUtilities.invokeLater(() -> {
@@ -943,6 +943,7 @@ public class PatientSwing extends JFrame {
                     return null;
                 }
                 String csv = getSymptomsFromUser();
+                System.out.println(csv);
                 if (csv == null) {
                     return null;
                 }
@@ -1249,7 +1250,7 @@ public class PatientSwing extends JFrame {
         try {
             String line = scanner.nextLine().trim();
             if (line == null) line = "";
-            out.writeUTF("SYMPTOMS");
+            //out.writeUTF("SYMPTOMS");
             out.writeUTF(line);
             out.flush();
         } catch (IOException e) {

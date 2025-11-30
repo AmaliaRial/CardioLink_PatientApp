@@ -63,7 +63,7 @@ public class BitalinoManager {
      *
      * @throws BITalinoException if the device is not idle or other errors occur.
      */
-    public synchronized void startRecordingToServer(DataOutputStream out) throws BITalinoException {
+    public synchronized void startRecordingToServer(DataOutputStream out, DataInputStream in) throws BITalinoException {
         if (isRecording) return;
         if (out == null) throw new IllegalArgumentException("Output stream null");
         isRecording = true;
@@ -81,37 +81,33 @@ public class BitalinoManager {
                 // Asegurarse de que el dispositivo esté en modo adquisición
                 bitalino.start(CHANNELS);
 
-
                 while (isRecording) {
                     Frame[] frames = bitalino.read(blockSize);
                     if (frames == null || frames.length == 0) continue;
-
 
                     for (Frame f : frames) {
                         int ecg = f.analog[0];
                         int eda = f.analog[1];
 
-
                         if (ecgBuilder.length() > 0) ecgBuilder.append(",");
                         ecgBuilder.append(ecg);
-
 
                         if (edaBuilder.length() > 0) edaBuilder.append(",");
                         edaBuilder.append(eda);
 
-
                         sampleCount++;
-
 
                         if (sampleCount >= samplesPerPacket) {
                             String dataString = "[" + ecgBuilder.toString() + ";" + edaBuilder.toString() + "]";
 
                             try {
                                 synchronized (out) {
-                                    System.out.println(dataString);
+                                    //System.out.println(dataString);
                                     //out.writeUTF("SEND_FRAGMENTS_OF_RECORDING");
                                     out.writeUTF(dataString);
                                     out.flush();
+                                    String confirmation=in.readUTF();
+                                    System.out.println(confirmation);
                                 }
                             } catch (IOException ioe) {
                                 ioe.printStackTrace();
@@ -140,6 +136,8 @@ public class BitalinoManager {
                         synchronized (out) {
                             out.writeUTF(dataString);
                             out.flush();
+                            String confirmation=in.readUTF();
+                            System.out.println("last section:"+confirmation);
                         }
                     } catch (IOException ignored) {}
                 }
@@ -147,13 +145,13 @@ public class BitalinoManager {
 
                 isRecording = false;
 
-                try {
-                    out.writeUTF("STOP");
-                    out.flush();
-                    System.out.println("a llegado a intentar enviar stop");
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                //try {
+                //    out.writeUTF("STOP");
+                //    out.flush();
+                //    System.out.println("a llegado a intentar enviar stop");
+                //} catch (IOException e) {
+                //    throw new RuntimeException(e);
+                //}
 
             }
         }, "BITalino-Recording-Thread");
