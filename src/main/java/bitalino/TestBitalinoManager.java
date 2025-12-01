@@ -43,12 +43,12 @@ public class TestBitalinoManager {
             manager.stopRecording();
             manager.disconnect();
 
-            System.out.println("✅ Recording stopped and saved successfully.");
+            System.out.println("Recording stopped and saved successfully.");
 
         } catch (BITalinoException e) {
-            System.err.println("❌ BITalino error: " + e.getMessage() + " (code " + e.code + ")");
+            System.err.println("BITalino error: " + e.getMessage() + " (code " + e.code + ")");
         } catch (Exception e) {
-            System.err.println("❌ Unexpected error: " + e.getMessage());
+            System.err.println("Unexpected error: " + e.getMessage());
         } finally {
             scanner.close();
         }

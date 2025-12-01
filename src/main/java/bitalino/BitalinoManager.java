@@ -60,6 +60,9 @@ public class BitalinoManager {
 
     /**
      * Starts recording ECG and EDA data for the specified patient.
+     * Data is sent in fragments to the server via the provided streams.
+     * @param out DataOutputStream to send data to the server.
+     * @param in DataInputStream to receive confirmations from the server.
      *
      * @throws BITalinoException if the device is not idle or other errors occur.
      */
@@ -179,6 +182,8 @@ public class BitalinoManager {
             int samplesPerPacket = SAMPLING_RATE * 10; // 10 segundos
             int sampleCount = 0;
 
+            stopRecordingIfNeeded(bitalino);
+
             try {
                 try {
                     bitalino.start(CHANNELS);
@@ -213,6 +218,7 @@ public class BitalinoManager {
 
                         if (sampleCount >= samplesPerPacket) {
                             String dataString = "[" + ecgBuilder.toString() + ";" + edaBuilder.toString() + "]";
+                            System.out.println(dataString);
                             try {
                                 PatientSwing.sendFragmentsOfRecording(dataString, out);
                             } catch (Exception e) {
@@ -236,6 +242,7 @@ public class BitalinoManager {
                 // Enviar resto parcial si existe
                 if (sampleCount > 0 && (ecgBuilder.length() > 0 || edaBuilder.length() > 0)) {
                     String dataString = "[" + ecgBuilder.toString() + ";" + edaBuilder.toString() + "]";
+                    System.out.println(dataString);
                     try {
                         PatientServerConnection.sendFragmentsOfRecording(dataString, out);
                     } catch (Exception e) {
@@ -336,6 +343,19 @@ public class BitalinoManager {
         });
 
         recordingThread.start();
+    }
+
+    public static void stopRecordingIfNeeded(BITalino bitalino) {
+        try {
+            // Check if the device is in recording mode, if so, stop it
+            if (bitalino != null) {
+                bitalino.stop();  // Stop any ongoing recording
+                bitalino.close();  // Close the device to reset it
+                System.out.println("Device stopped and reset to idle mode.");
+            }
+        } catch (BITalinoException e) {
+            System.out.println("Failed to stop the device. It may already be idle.");
+        }
     }
 
     /**

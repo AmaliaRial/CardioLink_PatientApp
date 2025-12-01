@@ -997,7 +997,7 @@ public class PatientSwing extends JFrame {
         p.add(new JLabel("Port:"));
         p.add(txtPort);
         p.add(Box.createRigidArea(new Dimension(0, 6)));
-        p.add(new JLabel("MAC address (optional for Bitalino):"));
+        p.add(new JLabel("MAC address: "));
         p.add(txtMac);
 
         JPanel btnPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
