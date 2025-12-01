@@ -76,7 +76,7 @@ public class BitalinoManager {
             StringBuilder ecgBuilder = new StringBuilder();
             StringBuilder edaBuilder = new StringBuilder();
             int sampleCount = 0;
-            final int samplesPerPacket = SAMPLING_RATE*10; // ajustar según necesidad
+            final int samplesPerPacket = SAMPLING_RATE*5; // ajustar según necesidad
             final int blockSize = 100; // cuantos frames pedir a bitalino.read()
 
 
