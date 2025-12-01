@@ -6,10 +6,13 @@ import executable.PatientSwing;
 import pojos.Patient;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.GZIPOutputStream;
+
 import executable.PatientServerConnection;
 
 public class BitalinoManager {
@@ -76,7 +79,7 @@ public class BitalinoManager {
             StringBuilder ecgBuilder = new StringBuilder();
             StringBuilder edaBuilder = new StringBuilder();
             int sampleCount = 0;
-            final int samplesPerPacket = SAMPLING_RATE*5; // ajustar según necesidad
+            final int samplesPerPacket = SAMPLING_RATE*10; // ajustar según necesidad
             final int blockSize = 100; // cuantos frames pedir a bitalino.read()
 
 
@@ -107,8 +110,10 @@ public class BitalinoManager {
                                 synchronized (out) {
                                     //System.out.println(dataString);
                                     //out.writeUTF("SEND_FRAGMENTS_OF_RECORDING");
-                                    out.writeUTF(dataString);
-                                    out.flush();
+                                    sendCompressedData(dataString, out);
+                                    //out.writeUTF(dataString);
+
+                                    //out.flush();
                                     String confirmation=in.readUTF();
                                     System.out.println(confirmation);
                                 }
@@ -137,8 +142,9 @@ public class BitalinoManager {
                     String dataString = "[" + ecgBuilder.toString() + ";" + edaBuilder.toString() + "]";
                     try {
                         synchronized (out) {
-                            out.writeUTF(dataString);
-                            out.flush();
+                            sendCompressedData(dataString, out);
+                            //out.writeUTF(dataString);
+                            //out.flush();
                             String confirmation=in.readUTF();
                             System.out.println("last section:"+confirmation);
                         }
@@ -162,6 +168,18 @@ public class BitalinoManager {
 
         recordingThread.setDaemon(true);
         recordingThread.start();
+    }
+    private void sendCompressedData(String data, DataOutputStream out) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (GZIPOutputStream gzip = new GZIPOutputStream(baos)) {
+            gzip.write(data.getBytes(StandardCharsets.UTF_8));
+        }
+        byte[] compressed = baos.toByteArray();
+
+        out.writeUTF("COMPRESSED_DATA");
+        out.writeInt(compressed.length);
+        out.write(compressed);
+        out.flush();
     }
 
 

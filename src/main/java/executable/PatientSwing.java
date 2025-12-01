@@ -12,12 +12,14 @@ import java.awt.event.WindowEvent;
 import java.io.*;
 import java.net.Socket;
 import java.net.SocketTimeoutException;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.*;
 import java.util.List;
 import java.util.regex.Pattern;
+import java.util.zip.GZIPOutputStream;
 
 
 public class PatientSwing extends JFrame {
@@ -1210,13 +1212,24 @@ public class PatientSwing extends JFrame {
     private static boolean stopRecording(DataOutputStream outputStream) {
         if (outputStream == null) return false;
         try {
-            outputStream.writeUTF("STOP");
-            outputStream.flush();
+            sendCompressedData("STOP", outputStream);
             return true;
         } catch (IOException e) {
             System.err.println("I/O error during STOP: " + e.getMessage());
             return false;
         }
+    }
+    private static void sendCompressedData(String data, DataOutputStream out) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        try (GZIPOutputStream gzip = new GZIPOutputStream(baos)) {
+            gzip.write(data.getBytes(StandardCharsets.UTF_8));
+        }
+        byte[] compressed = baos.toByteArray();
+
+        out.writeUTF("COMPRESSED_DATA");
+        out.writeInt(compressed.length);
+        out.write(compressed);
+        out.flush();
     }
 
     private static boolean RecordingStop(DataInputStream in) {
