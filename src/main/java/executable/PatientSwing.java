@@ -850,6 +850,7 @@ public class PatientSwing extends JFrame {
             throw new RuntimeException(e);
         }
         currentUsername = null;
+        authPanel.btnRegister.setEnabled(true);
         changeState("AUTH");
 
     }
