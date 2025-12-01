@@ -147,126 +147,55 @@ public class PatientServerConnection {
                 }
             }
 
-            // Configure BITalino and recording loop
-            bitalino = new BITalino();
-            int samplingRate = 1000;
+            BitalinoManager manager = new BitalinoManager();
 
-            boolean done = false;
-            while (!done) {
-                System.out.println("\nReady to record. Press ENTER to start recording or type Q + ENTER to quit.");
-                String line = scanner.nextLine();
-                if (line.equalsIgnoreCase("Q")) {
-                    System.out.println("Quitting application.");
-                    done = true;
-                    break;
-                }
-                //Creemos que estos metodos no se necesitan.
+            try {
+                // Connect to the BITalino device
+                manager.connect(MACAddress);
 
-                // 1) Crear DiagnosisFile en el servidor y obtener la primary key
-                int diagnosisFileId = openNewDiagnosisFileOnServer(outputStream, inputStream, username);
-                if (diagnosisFileId <= 0) {
-                    System.err.println("Could not open DiagnosisFile on server. Recording will NOT start.");
-                    continue;
-                }
+                // Start recording
+                //manager.startRecordingBitalino(username); // Uncomment if you have a Patient object
+                // Wait for user to hit Enter
+                scanner.nextLine();
 
-                // 2) Avisar al servidor de que empezamos a enviar datos para ese DiagnosisFile
-                outputStream.writeUTF("START");
-                outputStream.writeInt(diagnosisFileId);  // enviamos el ID al servidor
-                outputStream.flush();
+                // Stop recording and disconnect
+                manager.stopRecording();
+                manager.disconnect();
 
-                // 3) Empezar la grabación con BITalino
-                try {
-                    bitalino.open(MACAddress, samplingRate);
-                    int[] channelsToAcquire = new int[]{1, 2}; // example channels
-                    bitalino.start(channelsToAcquire);
-                    System.out.println("Recording started for DiagnosisFile ID " + diagnosisFileId +
-                            ". Press ENTER to stop recording.");
-                } catch (Throwable ex) {
-                    System.err.println("Error starting BITalino: " + ex.getMessage());
-                    try {
-                        outputStream.writeUTF("ERROR");
-                        outputStream.writeUTF("BITalino open/start failed: " + ex.getMessage());
-                        outputStream.flush();
-                    } catch (IOException ignored) {}
-                    try { bitalino.close(); } catch (Throwable ignored) {}
-                    continue;
-                }
+                System.out.println("Recording stopped and saved successfully.");
 
-                Thread stopper = new Thread(() -> {
-                    try {
-                        System.in.read();
-                    } catch (IOException ignored) {
-                    }
-                });
-                stopper.start();
-
-                int blockSize = 10;
-                long blockNumber = 0;
-                try {
-                    while (stopper.isAlive()) {
-                        Frame[] frames = bitalino.read(blockSize);
-                        // Send frames to server in blocks using reflection-safe helpers
-                        outputStream.writeUTF("DATA_BLOCK");
-                        outputStream.writeInt(frames.length);
-                        for (Frame f : frames) {
-                            long ts = extractTimestamp(f);
-                            int[] analog = extractAnalog(f);
-                            outputStream.writeLong(ts);
-                            outputStream.writeInt(analog.length);
-                            for (int v : analog) outputStream.writeInt(v);
-                        }
-                        outputStream.flush();
-                        blockNumber++;
-                    }
-                } catch (Throwable ex) {
-                    System.err.println("Error while recording/streaming frames: " + ex.getMessage());
-                    try {
-                        outputStream.writeUTF("ERROR");
-                        outputStream.writeUTF("Recording failed: " + ex.getMessage());
-                        outputStream.flush();
-                    } catch (IOException ignored) {}
-                } finally {
-                    try {
-                        bitalino.stop();
-                    } catch (Throwable ignored) {}
-                    try {
-                        bitalino.close();
-                    } catch (Throwable ignored) {}
-                }
-
-                // Send END marker
-                try {
-                    outputStream.writeUTF("END");
-                    outputStream.flush();
-                } catch (IOException e) {
-                    System.err.println("Failed to send END: " + e.getMessage());
-                }
-
-                // Server ACK (best-effort)
-                try {
-                    socket.setSoTimeout(2000);
-                    String ack = inputStream.readUTF();
-                    if ("ACK".equals(ack)) {
-                        String msg = inputStream.readUTF();
-                        System.out.println("Server: " + msg);
-                    }
-                } catch (SocketTimeoutException ste) {
-                    // no ack, continue
-                } catch (IOException ignored) {
-                } finally {
-                    try { socket.setSoTimeout(0); } catch (SocketException ignored) {}
-                }
-
-                // After recording stopped: select symptoms for THIS DiagnosisFile
-                sendSymptoms(scanner, outputStream, inputStream);
-
-                System.out.println("Do you want to record again? (yes/no)");
-                String again = scanner.nextLine().trim().toLowerCase();
-                if (!again.equals("yes") && !again.equals("y")) {
-                    done = true;
-                }
+            } catch (BITalinoException e) {
+                System.err.println("BITalino error: " + e.getMessage() + " (code " + e.code + ")");
+            } catch (Exception e) {
+                System.err.println("Unexpected error: " + e.getMessage());
+            } finally {
+                scanner.close();
             }
 
+
+
+            // Send END marker
+            try {
+                outputStream.writeUTF("END");
+                outputStream.flush();
+            } catch (IOException e) {
+                System.err.println("Failed to send END: " + e.getMessage());
+            }
+
+            // Server ACK (best-effort)
+            try {
+                socket.setSoTimeout(2000);
+                String ack = inputStream.readUTF();
+                if ("ACK".equals(ack)) {
+                    String msg = inputStream.readUTF();
+                    System.out.println("Server: " + msg);
+                }
+            } catch (SocketTimeoutException ste) {
+                // no ack, continue
+            } catch (IOException ignored) {
+            } finally {
+                try { socket.setSoTimeout(0); } catch (SocketException ignored) {}
+            }
         } catch (Throwable e) {
             Logger.getLogger(Patient.class.getName()).log(Level.SEVERE, "Error in the client", e);
         } finally {
