@@ -649,7 +649,7 @@ public class PatientSwing extends JFrame {
             symTitle.setFont(symTitle.getFont().deriveFont(Font.BOLD, 18f));
             add(symTitle, BorderLayout.NORTH);
 
-            JTextArea info = new JTextArea("Seleccione síntomas tras finalizar la grabación. El cliente enviará la selección al servidor.");
+            JTextArea info = new JTextArea("Select symptoms after completing the recording. The client will send the selected options to the server.");
             info.setEditable(false);
             info.setBackground(new Color(171, 191, 234));
             add(new JScrollPane(info), BorderLayout.CENTER);
@@ -703,13 +703,13 @@ public class PatientSwing extends JFrame {
                         success = ok;
                         if (success) currentUsername = username;
                     } else {
-                        serverMsg = "Respuesta inesperada del servidor";
+                        serverMsg = "Unexpected response from the server";
                         serverMsg = serverMsg+ "->"+ in.readUTF();
                     }
                 } catch (SocketTimeoutException ste) {
-                    serverMsg = "Timeout al comunicarse con el servidor.";
+                    serverMsg = "Timeout while communicating with the server.";
                 } catch (EOFException eof) {
-                    serverMsg = "Conexión cerrada por el servidor.";
+                    serverMsg = "Connection closed by the server.";
                     cleanupResources();
                 } catch (IOException ex) {
                     serverMsg = "Error I/O: " + ex.getMessage();
@@ -858,7 +858,7 @@ public class PatientSwing extends JFrame {
 
     private void handleStartRecording() {
         if (!connectedFlag || out == null || in == null) {
-            JOptionPane.showMessageDialog(this, "No conectado al servidor", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Not connected to server", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
         // Cambiar el estado de los botones inmediatamente
@@ -871,14 +871,14 @@ public class PatientSwing extends JFrame {
                 try {
                     if (!startRecording(out)) {
                         SwingUtilities.invokeLater(() -> {
-                            JOptionPane.showMessageDialog(PatientSwing.this, "Error enviando START", "Error", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(PatientSwing.this, "Error sending START", "Error", JOptionPane.ERROR_MESSAGE);
                             bitalinoRecordingPanel.setRecordingState(false); // Revertir a estado no grabando
                         });
                         return null;
                     }
                     if (!readyToRecord(in)) {
                         SwingUtilities.invokeLater(() -> {
-                            JOptionPane.showMessageDialog(PatientSwing.this, "Servidor no listo para grabar", "Error", JOptionPane.ERROR_MESSAGE);
+                            JOptionPane.showMessageDialog(PatientSwing.this, "Server not ready to record", "Error", JOptionPane.ERROR_MESSAGE);
                             bitalinoRecordingPanel.setRecordingState(false); // Revertir a estado no grabando
                         });
                         return null;
@@ -888,7 +888,7 @@ public class PatientSwing extends JFrame {
                     recording = true;
                 } catch (BITalinoException e) {
                     SwingUtilities.invokeLater(() -> {
-                        JOptionPane.showMessageDialog(PatientSwing.this, "Error en Bitalino: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(PatientSwing.this, "Error in Bitalino: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
                         bitalinoRecordingPanel.setRecordingState(false); // Revertir a estado no grabando
                     });
                 }
@@ -904,7 +904,7 @@ public class PatientSwing extends JFrame {
 
     private void handleStopRecording() {
         if (!connectedFlag || out == null || in == null) {
-            JOptionPane.showMessageDialog(this, "No conectado al servidor", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Not connected to server", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
         stopRequested = true;
@@ -916,7 +916,7 @@ public class PatientSwing extends JFrame {
             protected Void doInBackground() {
                 if (!stopRecording(out)) {
                     SwingUtilities.invokeLater(() -> {
-                        JOptionPane.showMessageDialog(PatientSwing.this, "Error enviando STOP", "Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(PatientSwing.this, "Error sending STOP", "Error", JOptionPane.ERROR_MESSAGE);
                         // Revertir a estado grabando porque no se pudo detener
                         bitalinoRecordingPanel.setRecordingState(true);
                     });
@@ -929,13 +929,13 @@ public class PatientSwing extends JFrame {
 
                 if (!RecordingStop(in)) {
                     SwingUtilities.invokeLater(() -> {
-                        JOptionPane.showMessageDialog(PatientSwing.this, "No se confirmó STOP por el servidor", "Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(PatientSwing.this, "STOP was not confirmed by the server", "Error", JOptionPane.ERROR_MESSAGE);
                     });
                     return null;
                 }
                 if (!SelectSymptoms(in)) {
                     SwingUtilities.invokeLater(() -> {
-                        JOptionPane.showMessageDialog(PatientSwing.this, "Servidor no solicitó selección de síntomas", "Info", JOptionPane.INFORMATION_MESSAGE);
+                        JOptionPane.showMessageDialog(PatientSwing.this, "The server did not request symptom selection", "Info", JOptionPane.INFORMATION_MESSAGE);
                     });
                     return null;
                 }
@@ -949,11 +949,11 @@ public class PatientSwing extends JFrame {
                 }
                 if (isSymptomsReceived(in)) {
                     SwingUtilities.invokeLater(() -> {
-                        JOptionPane.showMessageDialog(PatientSwing.this, "Síntomas enviados y confirmados por el servidor", "Info", JOptionPane.INFORMATION_MESSAGE);
+                        JOptionPane.showMessageDialog(PatientSwing.this, "Symptoms sent and confirmed by the server", "Info", JOptionPane.INFORMATION_MESSAGE);
                     });
                 } else {
                     SwingUtilities.invokeLater(() -> {
-                        JOptionPane.showMessageDialog(PatientSwing.this, "Servidor no confirmó la recepción de síntomas", "Error", JOptionPane.ERROR_MESSAGE);
+                        JOptionPane.showMessageDialog(PatientSwing.this, "The server did not confirm receipt of the symptoms", "Error", JOptionPane.ERROR_MESSAGE);
                     });
                 }
                 return null;
@@ -1019,14 +1019,14 @@ public class PatientSwing extends JFrame {
             String portStr = txtPort.getText().trim();
             String mac = txtMac.getText().trim();
             if (!isValidIPAddress(host)) {
-                JOptionPane.showMessageDialog(dlg, "Host inválido", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(dlg, "Invalid Host", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             int port;
             try {
                 port = Integer.parseInt(portStr);
             } catch (NumberFormatException ex) {
-                JOptionPane.showMessageDialog(dlg, "Puerto inválido", "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(dlg, "Invalid port", "Error", JOptionPane.ERROR_MESSAGE);
                 return;
             }
             btnConnect.setEnabled(false);
@@ -1062,7 +1062,7 @@ public class PatientSwing extends JFrame {
                         macAddress = mac.isBlank() ? null : mac;
                         authPanel.setLoginEnabled(true);
                         authPanel.setRegisterEnabled(true);
-                        JOptionPane.showMessageDialog(dlg, "¡Conectado!", "Info", JOptionPane.INFORMATION_MESSAGE);
+                        JOptionPane.showMessageDialog(dlg, "Connected!", "Info", JOptionPane.INFORMATION_MESSAGE);
                         dlg.dispose();
                     } else {
                         JOptionPane.showMessageDialog(dlg, msg, "Error", JOptionPane.ERROR_MESSAGE);
@@ -1280,7 +1280,7 @@ public class PatientSwing extends JFrame {
 
                 JPanel panel = new JPanel();
                 panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-                panel.add(new JLabel("Seleccione los síntomas:"));
+                panel.add(new JLabel("Select your symptoms:"));
                 panel.add(c1);
                 panel.add(c2);
                 panel.add(c3);
