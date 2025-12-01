@@ -1277,6 +1277,8 @@ public class PatientSwing extends JFrame {
                 JCheckBox c4 = new JCheckBox("Trouble swallowing");
                 JCheckBox c5 = new JCheckBox("Trouble sleeping");
                 JCheckBox c6 = new JCheckBox("Fatigue");
+                JCheckBox c7 = new JCheckBox("Palpitations");
+                JCheckBox c8 = new JCheckBox("Anxiety");
 
                 JPanel panel = new JPanel();
                 panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
@@ -1287,16 +1289,20 @@ public class PatientSwing extends JFrame {
                 panel.add(c4);
                 panel.add(c5);
                 panel.add(c6);
+                panel.add(c7);
+                panel.add(c8);
 
                 int ok = JOptionPane.showConfirmDialog(PatientSwing.this, panel, "Select Symptoms", JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
                 if (ok == JOptionPane.OK_OPTION) {
                     List<String> chosen = new ArrayList<>();
                     if (c1.isSelected()) chosen.add("Pain");
                     if (c2.isSelected()) chosen.add("Difficulty holding objects");
-                    if (c3.isSelected()) chosen.add("trouble breathing");
+                    if (c3.isSelected()) chosen.add("Trouble breathing");
                     if (c4.isSelected()) chosen.add("Trouble swallowing");
                     if (c5.isSelected()) chosen.add("Trouble sleeping");
                     if (c6.isSelected()) chosen.add("Fatigue");
+                    if (c7.isSelected()) chosen.add("Palpitations");
+                    if (c8.isSelected()) chosen.add("Anxiety");
                     result[0] = String.join(",", chosen);
                 } else {
                     result[0] = null;
