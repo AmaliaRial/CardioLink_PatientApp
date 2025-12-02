@@ -1,1 +1,0 @@
-java -jar CardioLink_PatientApp.jar
